@@ -4,6 +4,7 @@ project(crc_serial_proto LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-enable_testing()
-add_subdirectory(tests)
+add_subdirectory(common)
+add_subdirectory(app)
+add_subdirectory(transport)
 
