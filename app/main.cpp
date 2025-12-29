@@ -38,18 +38,32 @@ return 1;
 //if(std::chrono::steady_clock::now() - last_print > std::chrono::seconds(5)){
 //..  std::cout<<"----Status:Watin ">
 //}
+//
+static auto last_print = std::chrono::steady_clock::now();
+        if (std::chrono::steady_clock::now() - last_print > std::chrono::seconds(5)) {
+            std::cout << "--- Status: " << (isSender ? "Sender" : "Receiver") << " Active ---" << std::endl;
+            last_print = std::chrono::steady_clock::now();
+        }
         // 2. State Logic
         if (state == State::HANDSHAKING) {
             if (isSender) {
-                std::cout << "Sending SYN..." << std::endl;
+              
+std::cout << "Sending SYN..." << std::endl;
                 serial.write(Packet::serialize(Packet::TYPE_SYN, 0, "READY"));
-                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 
-                auto frame = Packet::deserialize(pool);
-                if (frame.valid && frame.type == Packet::TYPE_ACK) {
-                    std::cout << "Handshake Complete!" << std::endl;
-                    state = State::SENDING;
+                auto start = std::chrono::steady_clock::now();
+                while(std::chrono::steady_clock::now() - start < std::chrono::milliseconds(1000)) {
+                    int rn = serial.read(temp_buf, 256);
+                    if (rn > 0) pool.insert(pool.end(), temp_buf, temp_buf + rn);
+                    
+                    auto frame = Packet::deserialize(pool);
+                    if (frame.valid && frame.type == Packet::TYPE_ACK) {
+                        std::cout << "Handshake Complete!" << std::endl;
+                        state = State::SENDING;
+                        break;
+                    }
                 }
+            }
             } else {
                 auto frame = Packet::deserialize(pool);
                 if (frame.valid && frame.type == Packet::TYPE_SYN) {
