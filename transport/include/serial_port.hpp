@@ -3,7 +3,10 @@
 #include <vector>
 #include <string>
 
-class SerialPort {
+#include "iserial_port.hpp"
+
+class SerialPort : public ISerialPort {
+
 public:
     SerialPort();
     ~SerialPort();
@@ -12,11 +15,11 @@ public:
     SerialPort(const SerialPort&) = delete;
     SerialPort& operator=(const SerialPort&) = delete;
 
-    bool open(const std::string& port_name, int baud_rate);
-    void close();
+    bool open(const std::string& port_name, int baud_rate) override;
+    void close() override;
     
-    int write(const std::vector<uint8_t>& data);
-    int read(uint8_t* buffer, size_t size);
+    int write(const std::vector<uint8_t>& data) override;
+    int read(uint8_t* buffer, size_t size) override;
 
 private:
     // The "Pimpl" - This struct is defined only in the .cpp files

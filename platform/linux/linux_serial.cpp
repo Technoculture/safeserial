@@ -14,6 +14,9 @@ bool SerialPort::open(const std::string& port, int baud) {
     pimpl->fd = ::open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (pimpl->fd == -1) return false;
 
+    // Clear O_NDELAY to make it blocking (uses VTIME)
+    fcntl(pimpl->fd, F_SETFL, 0);
+
     struct termios tty;
     if (tcgetattr(pimpl->fd, &tty) != 0) return false;
 
@@ -32,7 +35,7 @@ bool SerialPort::open(const std::string& port, int baud) {
     tty.c_oflag &= ~OPOST;                          // Raw output
 
     tty.c_cc[VMIN]  = 0;  // Non-blocking
-    tty.c_cc[VTIME] = 10; // 1 second timeout
+    tty.c_cc[VTIME] = 1;  // 0.1 second timeout (faster polling)
 
     return tcsetattr(pimpl->fd, TCSANOW, &tty) == 0;
 }
