@@ -75,6 +75,8 @@ uv run --with matplotlib python tests/verification_suite.py
 
 60 transactions × 10% packet loss × 2% byte corruption = **Zero data loss.**
 
+![Fault Tolerance Test Results](test_timeline.png)
+
 ---
 
 *Built for systems where 99.9% reliability means someone gets hurt.*
