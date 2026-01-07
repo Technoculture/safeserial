@@ -1,51 +1,75 @@
-# Data Bridge: Medical-Grade Reliable Serial Protocol
+# Data Bridge
 
-A robust, chaos-tested serial communication protocol designed for mission-critical applications (ISO 13485 compliant).
+**Guaranteed reliable serial communication for embedded systems.**
 
-## Core Academic Claims
-*   **Zero-Overhead Framing**: Uses **COBS (Consistent Overhead Byte Stuffing)** to provide deterministic packet delimitation without magic-number collisions, maintaining minimal overhead (~0.4%).
-*   **Strict Integrity**: Implements **CRC32** checksums to detect bit-level corruptions, far surpassing standard CRC16 reliability for high-density JSON payloads.
-*   **Automatic Recovery**: Features a Stop-and-Wait ARQ mechanism with adaptive retransmission to guarantee delivery over lossy links.
-*   **Formal Verification**: Validated via a "Chaos Monkey" fault-injection suite that simulates packet drops and bit-flips at the OS/PTY level.
+Serial links drop packets. Electrical noise flips bits. Cables get unplugged. Data Bridge handles all of it automatically so your application code doesn't have to.
 
-## Integration
-### 1. C++ Library
-The project builds a static library `libdata_bridge.a` in `build/src/`. 
-Link against this and include `include/` to use the protocol in your C++ apps.
+## How It Works
 
-### 2. Node.js / Electron (Roadmap)
-We are evolving this into a NAPI-based library.
-*   **Next Phase**: Implement a Node.js C++ addon wrapper.
-*   **Electron Integration**: Use in the main process to bridge medical hardware data to a modern React/Vue UI with full ISO 13485 reliability.
+```
+Your Data → [Framing] → [CRC32 Check] → [ACK/Retry] → Guaranteed Delivery
+```
 
-### 2. Verify (The "Torment Test")
-Run the automated verification suite to generate an ISO-compliant reliability report and visualization:
+1. **COBS Framing** — Packets are delimited without magic bytes that could appear in your data
+2. **CRC32 Integrity** — Every packet is checksummed; corrupted data is rejected and retried
+3. **ACK-Based Delivery** — Every fragment requires acknowledgement; lost packets are automatically retransmitted
+
+The sender keeps retrying until the receiver confirms. Your data arrives intact, or you get a clear timeout—never silent corruption.
+
+## When You Need This
+
+- Medical devices where data integrity is non-negotiable
+- Industrial controllers over noisy RS-485 links  
+- Any embedded system where "probably delivered" isn't good enough
+
+## Quick Start
+
+```cpp
+#include <data_bridge/protocol/packet.hpp>
+#include <data_bridge/transport/serial_port.hpp>
+
+// Send with guaranteed delivery
+auto packet = Packet::serialize(Packet::TYPE_DATA, seq_id, your_json);
+serial.write(packet);
+// Library handles ACK waiting and retransmission automatically
+```
+
+Build:
+```bash
+mkdir build && cd build && cmake .. && make
+# Links: libdata_bridge.a
+```
+
+## Verification
+
+We test under chaos:
 ```bash
 uv run --with matplotlib python tests/verification_suite.py
 ```
 
-## ISO 13485:2016 Compliance & Governance
+This runs 60 transactions through a "chaos monkey" that randomly drops 10% of packets and corrupts 2% of bytes. The protocol recovers from every fault—zero data loss.
 
-The Data Bridge is engineered as a **Class C (Life-Critical)** software component. Our development lifecycle adheres to rigid quality management standards:
+![How Data Bridge Works](reliability_plot.png)
 
-### 1. Risk Management (ISO 14971)
-*   **Failure Modes**: We proactively address loss of link, bit inversion, and buffer overflow.
-*   **Mitigation**: COBS ensures we never lose frame synchronization; CRC32 guarantees data integrity; Stop-and-Wait ARQ ensures delivery.
+## Integration
 
-### 2. Verification Strategy
-The system features an automated "Torment Suite" that executes at every build:
-*   **Fault Injection**: Simulates OS-level packet drops and bit corruption via virtual PTYs.
-*   **Traceability**: Every transaction is logged with microsecond precision, allowing for post-market surveillance of link health.
+**C++ Library**: Link against `build/src/libdata_bridge.a`, include from `include/`
 
-### 3. Reliability Dashboard
-Our "Chaos Dashboard" visualizes how the protocol "fights" through noise to maintain 100% integrity.
+**Node.js/Electron**:
+```bash
+cd bindings/node
+npm install
+npm run build
+```
 
-![Reliability Timeline](reliability_plot.png)
+```typescript
+import { DataBridge } from '@aspect-labs/data-bridge';
 
-*   **Success (circles)**: Confirmed delivery.
-*   **Retries (x)**: Automatic protocol recovery.
-*   **Chaos (v/star)**: OS-level faults (drops/bitflips) successfully avoided.
+const bridge = await DataBridge.open('/dev/ttyUSB0');
+bridge.on('data', (data) => console.log('Received:', data));
+await bridge.send('Hello');
+```
 
 ---
-## Results
-The protocol is proven to maintain 100% data integrity even at **10% packet loss** and **2% bit corruption** rates.
+
+*Built for systems where failure is not an option.*

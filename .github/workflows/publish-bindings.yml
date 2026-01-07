@@ -1,0 +1,75 @@
+name: Build & Publish Native Bindings
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  prebuild:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [20]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: bindings/node/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: bindings/node
+        run: npm ci --ignore-scripts
+      
+      - name: Build native addon
+        working-directory: bindings/node
+        run: npm run build:native
+      
+      - name: Create prebuilds
+        working-directory: bindings/node
+        run: npx prebuildify --napi --strip
+      
+      - name: Upload prebuilds
+        uses: actions/upload-artifact@v4
+        with:
+          name: prebuilds-${{ matrix.os }}
+          path: bindings/node/prebuilds
+  
+  publish:
+    needs: prebuild
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Download all prebuilds
+        uses: actions/download-artifact@v4
+        with:
+          path: bindings/node/prebuilds
+          merge-multiple: true
+      
+      - name: Install and build TypeScript
+        working-directory: bindings/node
+        run: |
+          npm ci --ignore-scripts
+          npm run build:ts
+      
+      - name: Publish to npm
+        working-directory: bindings/node
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

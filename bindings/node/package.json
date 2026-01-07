@@ -1,0 +1,74 @@
+{
+  "name": "@aspect-labs/data-bridge",
+  "version": "0.1.0",
+  "description": "Guaranteed reliable serial communication for Node.js and Electron",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "install": "prebuild-install || cmake-js compile",
+    "build": "npm run build:native && npm run build:ts",
+    "build:native": "cmake-js compile",
+    "build:ts": "tsup lib/index.ts --format cjs,esm --dts",
+    "prebuild": "prebuildify --napi --strip",
+    "test": "vitest run",
+    "clean": "cmake-js clean && rm -rf dist"
+  },
+  "files": [
+    "dist",
+    "prebuilds",
+    "src",
+    "lib",
+    "CMakeLists.txt"
+  ],
+  "dependencies": {
+    "node-addon-api": "^7.0.0",
+    "prebuild-install": "^7.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "cmake-js": "^7.3.0",
+    "prebuildify": "^6.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "win32",
+    "linux",
+    "darwin"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "binary": {
+    "napi_versions": [
+      8
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aspect-labs/data-bridge"
+  },
+  "keywords": [
+    "serial",
+    "uart",
+    "reliable",
+    "medical",
+    "embedded",
+    "electron",
+    "napi"
+  ],
+  "license": "MIT"
+}

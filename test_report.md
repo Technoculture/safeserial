@@ -1,6 +1,6 @@
 # Test Record - ISO 13485 Compliance
 **Project:** Data Bridge Serial Protocol
-**Date:** 2026-01-07T23:05:53.274226
+**Date:** 2026-01-07T23:35:51.241385
 **Tester:** Automated Runner
 
 ## 1. Scope
@@ -32,523 +32,355 @@ The software HAS demonstrated compliance with reliability requirements.
 ### T-001 Details
 ### Sender Log
 ```
-[23:05:17.076] [SENDER] Starting stress test with 20 items...
-[23:05:17.077] [SENDER] Sending SYN...
-[23:05:17.177] [SENDER] Rx Type: 32
-[23:05:17.177] [SENDER] Handshake Complete!
-[23:05:17.177] [SENDER] Sending Item 0 Frag 0/1
-[SENDER] Item 0 Verified.
-[23:05:17.177] [SENDER] Sending Item 1 Frag 0/2
-[23:05:17.177] [SENDER] Sending Item 1 Frag 1/2
-[SENDER] Item 1 Verified.
-[23:05:17.177] [SENDER] Sending Item 2 Frag 0/1
-[SENDER] Item 2 Verified.
-[23:05:17.178] [SENDER] Sending Item 3 Frag 0/3
-[23:05:17.178] [SENDER] Sending Item 3 Frag 1/3
-[23:05:17.178] [SENDER] Sending Item 3 Frag 2/3
-[SENDER] Item 3 Verified.
-[23:05:17.178] [SENDER] Sending Item 4 Frag 0/4
-[23:05:17.178] [SENDER] Sending Item 4 Frag 1/4
-[23:05:17.178] [SENDER] Sending Item 4 Frag 2/4
-[23:05:17.178] [SENDER] Sending Item 4 Frag 3/4
-[SENDER] Item 4 Verified.
-[23:05:17.178] [SENDER] Sending Item 5 Frag 0/3
-[23:05:17.178] [SENDER] Sending Item 5 Frag 1/3
-[23:05:17.178] [SENDER] Sending Item 5 Frag 2/3
-[SENDER] Item 5 Verified.
-[23:05:17.179] [SENDER] Sending Item 6 Frag 0/5
-[23:05:17.179] [SENDER] Sending Item 6 Frag 1/5
-[23:05:17.179] [SENDER] Sending Item 6 Frag 2/5
-[23:05:17.179] [SENDER] Sending Item 6 Frag 3/5
-[23:05:17.179] [SENDER] Sending Item 6 Frag 4/5
-[SENDER] Item 6 Verified.
-[23:05:17.179] [SENDER] Sending Item 7 Frag 0/4
-[23:05:17.179] [SENDER] Sending Item 7 Frag 1/4
-[23:05:17.179] [SENDER] Sending Item 7 Frag 2/4
-[23:05:17.179] [SENDER] Sending Item 7 Frag 3/4
-[SENDER] Item 7 Verified.
-[23:05:17.179] [SENDER] Sending Item 8 Frag 0/2
-[23:05:17.179] [SENDER] Sending Item 8 Frag 1/2
-[SENDER] Item 8 Verified.
-[23:05:17.179] [SENDER] Sending Item 9 Frag 0/2
-[23:05:17.180] [SENDER] Sending Item 9 Frag 1/2
-[SENDER] Item 9 Verified.
-[23:05:17.180] [SENDER] Sending Item 10 Frag 0/2
-[23:05:17.180] [SENDER] Sending Item 10 Frag 1/2
-[SENDER] Item 10 Verified.
-[23:05:17.180] [SENDER] Sending Item 11 Frag 0/4
-[23:05:17.180] [SENDER] Sending Item 11 Frag 1/4
-[23:05:17.180] [SENDER] Sending Item 11 Frag 2/4
-[23:05:17.180] [SENDER] Sending Item 11 Frag 3/4
-[SENDER] Item 11 Verified.
-[23:05:17.180] [SENDER] Sending Item 12 Frag 0/1
-[SENDER] Item 12 Verified.
-[23:05:17.180] [SENDER] Sending Item 13 Frag 0/3
-[23:05:17.180] [SENDER] Sending Item 13 Frag 1/3
-[23:05:17.180] [SENDER] Sending Item 13 Frag 2/3
-[SENDER] Item 13 Verified.
-[23:05:17.180] [SENDER] Sending Item 14 Frag 0/4
-[23:05:17.181] [SENDER] Sending Item 14 Frag 1/4
-[23:05:17.181] [SENDER] Sending Item 14 Frag 2/4
-[23:05:17.181] [SENDER] Sending Item 14 Frag 3/4
-[SENDER] Item 14 Verified.
-[23:05:17.181] [SENDER] Sending Item 15 Frag 0/1
-[SENDER] Item 15 Verified.
-[23:05:17.181] [SENDER] Sending Item 16 Frag 0/2
-[23:05:17.181] [SENDER] Sending Item 16 Frag 1/2
-[SENDER] Item 16 Verified.
-[23:05:17.181] [SENDER] Sending Item 17 Frag 0/4
-[23:05:17.181] [SENDER] Sending Item 17 Frag 1/4
-[23:05:17.181] [SENDER] Sending Item 17 Frag 2/4
-[23:05:17.181] [SENDER] Sending Item 17 Frag 3/4
-[SENDER] Item 17 Verified.
-[23:05:17.181] [SENDER] Sending Item 18 Frag 0/4
-[23:05:17.181] [SENDER] Sending Item 18 Frag 1/4
-[23:05:17.182] [SENDER] Sending Item 18 Frag 2/4
-[23:05:17.182] [SENDER] Sending Item 18 Frag 3/4
-[SENDER] Item 18 Verified.
-[23:05:17.182] [SENDER] Sending Item 19 Frag 0/3
-[23:05:17.182] [SENDER] Sending Item 19 Frag 1/3
-[23:05:17.182] [SENDER] Sending Item 19 Frag 2/3
-[SENDER] Item 19 Verified.
-[SENDER] TEST COMPLETE - All items transferred successfully.
+1767809106.905596: [SENDER] Starting stress test with 20 items...
+1767809106.905616: [SENDER] Sending SYN...
+1767809107.006619: [SENDER] Rx Type: 32
+1767809107.006625: [SENDER] Handshake Complete!
+1767809107.006633: [SENDER] Sending Item 0 Frag 0/1
+1767809107.006792: [SENDER] Item 0 Verified.
+1767809107.006801: [SENDER] Sending Item 1 Frag 0/2
+1767809107.007015: [SENDER] Sending Item 1 Frag 1/2
+1767809107.007110: [SENDER] Item 1 Verified.
+1767809107.007117: [SENDER] Sending Item 2 Frag 0/1
+1767809107.007244: [SENDER] Item 2 Verified.
+1767809107.007252: [SENDER] Sending Item 3 Frag 0/3
+1767809107.007354: [SENDER] Sending Item 3 Frag 1/3
+1767809107.007438: [SENDER] Sending Item 3 Frag 2/3
+1767809107.007555: [SENDER] Item 3 Verified.
+1767809107.007568: [SENDER] Sending Item 4 Frag 0/4
+1767809107.007671: [SENDER] Sending Item 4 Frag 1/4
+1767809107.007775: [SENDER] Sending Item 4 Frag 2/4
+1767809107.007889: [SENDER] Sending Item 4 Frag 3/4
+1767809107.008019: [SENDER] Item 4 Verified.
+1767809107.008030: [SENDER] Sending Item 5 Frag 0/3
+1767809107.008186: [SENDER] Sending Item 5 Frag 1/3
+1767809107.008346: [SENDER] Sending Item 5 Frag 2/3
+1767809107.008455: [SENDER] Item 5 Verified.
+1767809107.008469: [SENDER] Sending Item 6 Frag 0/5
+1767809107.008593: [SENDER] Sending Item 6 Frag 1/5
+1767809107.008696: [SENDER] Sending Item 6 Frag 2/5
+1767809107.008777: [SENDER] Sending Item 6 Frag 3/5
+1767809107.008898: [SENDER] Sending Item 6 Frag 4/5
+1767809107.008966: [SENDER] Item 6 Verified.
+1767809107.008978: [SENDER] Sending Item 7 Frag 0/4
+1767809107.009079: [SENDER] Sending Item 7 Frag 1/4
+1767809107.009156: [SENDER] Sending Item 7 Frag 2/4
+1767809107.009237: [SENDER] Sending Item 7 Frag 3/4
+1767809107.009320: [SENDER] Item 7 Verified.
+1767809107.009326: [SENDER] Sending Item 8 Frag 0/2
+1767809107.009409: [SENDER] Sending Item 8 Frag 1/2
+1767809107.009486: [SENDER] Item 8 Verified.
+1767809107.009492: [SENDER] Sending Item 9 Frag 0/2
+1767809107.009567: [SENDER] Sending Item 9 Frag 1/2
+1767809107.009636: [SENDER] Item 9 Verified.
+1767809107.009641: [SENDER] Sending Item 10 Frag 0/2
+1767809107.009735: [SENDER] Sending Item 10 Frag 1/2
+1767809107.009799: [SENDER] Item 10 Verified.
+1767809107.009810: [SENDER] Sending Item 11 Frag 0/4
+1767809107.009884: [SENDER] Sending Item 11 Frag 1/4
+1767809107.009959: [SENDER] Sending Item 11 Frag 2/4
+1767809107.010036: [SENDER] Sending Item 11 Frag 3/4
+1767809107.010119: [SENDER] Item 11 Verified.
+1767809107.010124: [SENDER] Sending Item 12 Frag 0/1
+1767809107.010200: [SENDER] Item 12 Verified.
+1767809107.010211: [SENDER] Sending Item 13 Frag 0/3
+1767809107.010343: [SENDER] Sending Item 13 Frag 1/3
+1767809107.010433: [SENDER] Sending Item 13 Frag 2/3
+1767809107.010562: [SENDER] Item 13 Verified.
+1767809107.010574: [SENDER] Sending Item 14 Frag 0/4
+1767809107.010658: [SENDER] Sending Item 14 Frag 1/4
+1767809107.010791: [SENDER] Sending Item 14 Frag 2/4
+1767809107.010909: [SENDER] Sending Item 14 Frag 3/4
+1767809107.011029: [SENDER] Item 14 Verified.
+1767809107.011036: [SENDER] Sending Item 15 Frag 0/1
+1767809107.011176: [SENDER] Item 15 Verified.
+1767809107.011188: [SENDER] Sending Item 16 Frag 0/2
+1767809107.011301: [SENDER] Sending Item 16 Frag 1/2
+1767809107.011399: [SENDER] Item 16 Verified.
+1767809107.011410: [SENDER] Sending Item 17 Frag 0/4
+1767809107.011495: [SENDER] Sending Item 17 Frag 1/4
+1767809107.011623: [SENDER] Sending Item 17 Frag 2/4
+1767809107.011758: [SENDER] Sending Item 17 Frag 3/4
+1767809107.011882: [SENDER] Item 17 Verified.
+1767809107.011902: [SENDER] Sending Item 18 Frag 0/4
+1767809107.012041: [SENDER] Sending Item 18 Frag 1/4
+1767809107.012135: [SENDER] Sending Item 18 Frag 2/4
+1767809107.012236: [SENDER] Sending Item 18 Frag 3/4
+1767809107.012346: [SENDER] Item 18 Verified.
+1767809107.012357: [SENDER] Sending Item 19 Frag 0/3
+1767809107.012447: [SENDER] Sending Item 19 Frag 1/3
+1767809107.012573: [SENDER] Sending Item 19 Frag 2/3
+1767809107.012666: [SENDER] Item 19 Verified.
+1767809107.012670: [SENDER] TEST COMPLETE - All items transferred successfully.
 
 ```
 ### Receiver Log
 ```
-[23:05:17.076] [RECEIVER] Listening...
-[RECEIVER] Read 24 bytes
-[RECEIVER] Synqed.
-[RECEIVER] Read 106 bytes
-[23:05:17.177] [RECEIVER] Completed Item 0 (Total: 1)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 25 bytes
-[23:05:17.177] [RECEIVER] Completed Item 1 (Total: 2)
-[RECEIVER] Read 103 bytes
-[23:05:17.178] [RECEIVER] Completed Item 2 (Total: 3)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:17.178] [RECEIVER] Completed Item 3 (Total: 4)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 77 bytes
-[23:05:17.178] [RECEIVER] Completed Item 4 (Total: 5)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 95 bytes
-[23:05:17.179] [RECEIVER] Completed Item 5 (Total: 6)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:17.179] [RECEIVER] Completed Item 6 (Total: 7)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 109 bytes
-[23:05:17.179] [RECEIVER] Completed Item 7 (Total: 8)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 54 bytes
-[23:05:17.179] [RECEIVER] Completed Item 8 (Total: 9)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:17.180] [RECEIVER] Completed Item 9 (Total: 10)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 35 bytes
-[23:05:17.180] [RECEIVER] Completed Item 10 (Total: 11)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 31 bytes
-[23:05:17.180] [RECEIVER] Completed Item 11 (Total: 12)
-[RECEIVER] Read 88 bytes
-[23:05:17.180] [RECEIVER] Completed Item 12 (Total: 13)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 44 bytes
-[23:05:17.180] [RECEIVER] Completed Item 13 (Total: 14)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[23:05:17.181] [RECEIVER] Completed Item 14 (Total: 15)
-[RECEIVER] Read 106 bytes
-[23:05:17.181] [RECEIVER] Completed Item 15 (Total: 16)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 93 bytes
-[23:05:17.181] [RECEIVER] Completed Item 16 (Total: 17)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 99 bytes
-[23:05:17.181] [RECEIVER] Completed Item 17 (Total: 18)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 48 bytes
-[23:05:17.182] [RECEIVER] Completed Item 18 (Total: 19)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 135 bytes
-[23:05:17.182] [RECEIVER] Completed Item 19 (Total: 20)
+1767809106.905494: [RECEIVER] Listening...
+1767809107.006580: [RECEIVER] Synqed.
+1767809107.006774: [RECEIVER] Completed Item 0 (Total: 1)
+1767809107.007089: [RECEIVER] Completed Item 1 (Total: 2)
+1767809107.007241: [RECEIVER] Completed Item 2 (Total: 3)
+1767809107.007529: [RECEIVER] Completed Item 3 (Total: 4)
+1767809107.007985: [RECEIVER] Completed Item 4 (Total: 5)
+1767809107.008426: [RECEIVER] Completed Item 5 (Total: 6)
+1767809107.008955: [RECEIVER] Completed Item 6 (Total: 7)
+1767809107.009310: [RECEIVER] Completed Item 7 (Total: 8)
+1767809107.009473: [RECEIVER] Completed Item 8 (Total: 9)
+1767809107.009627: [RECEIVER] Completed Item 9 (Total: 10)
+1767809107.009785: [RECEIVER] Completed Item 10 (Total: 11)
+1767809107.010112: [RECEIVER] Completed Item 11 (Total: 12)
+1767809107.010197: [RECEIVER] Completed Item 12 (Total: 13)
+1767809107.010543: [RECEIVER] Completed Item 13 (Total: 14)
+1767809107.011018: [RECEIVER] Completed Item 14 (Total: 15)
+1767809107.011157: [RECEIVER] Completed Item 15 (Total: 16)
+1767809107.011387: [RECEIVER] Completed Item 16 (Total: 17)
+1767809107.011869: [RECEIVER] Completed Item 17 (Total: 18)
+1767809107.012328: [RECEIVER] Completed Item 18 (Total: 19)
+1767809107.012655: [RECEIVER] Completed Item 19 (Total: 20)
 
 ```
 
 ### T-002 Details
 ### Sender Log
 ```
-[23:05:18.218] [SENDER] Starting stress test with 20 items...
-[23:05:18.218] [SENDER] Sending SYN...
-[23:05:18.319] [SENDER] Rx Type: 32
-[23:05:18.319] [SENDER] Handshake Complete!
-[23:05:18.319] [SENDER] Sending Item 0 Frag 0/1
-[SENDER] Item 0 Verified.
-[23:05:18.320] [SENDER] Sending Item 1 Frag 0/2
-[23:05:18.320] [SENDER] Sending Item 1 Frag 1/2
-[SENDER] Item 1 Verified.
-[23:05:18.320] [SENDER] Sending Item 2 Frag 0/1
-[SENDER] Item 2 Verified.
-[23:05:18.320] [SENDER] Sending Item 3 Frag 0/3
-[23:05:18.320] [SENDER] Sending Item 3 Frag 1/3
-[23:05:18.320] [SENDER] Sending Item 3 Frag 2/3
-[SENDER] Item 3 Verified.
-[23:05:18.321] [SENDER] Sending Item 4 Frag 0/4
-[23:05:18.321] [SENDER] Sending Item 4 Frag 1/4
-[23:05:18.321] [SENDER] Sending Item 4 Frag 2/4
-[23:05:18.321] [SENDER] Sending Item 4 Frag 3/4
-[SENDER] Item 4 Verified.
-[23:05:18.321] [SENDER] Sending Item 5 Frag 0/3
-[23:05:18.321] [SENDER] Sending Item 5 Frag 1/3
-[23:05:18.321] [SENDER] Sending Item 5 Frag 2/3
-[SENDER] Item 5 Verified.
-[23:05:18.321] [SENDER] Sending Item 6 Frag 0/5
-[23:05:18.322] [SENDER] Sending Item 6 Frag 1/5
-[23:05:18.322] [SENDER] Sending Item 6 Frag 2/5
-[23:05:18.322] [SENDER] Sending Item 6 Frag 3/5
-[23:05:18.322] [SENDER] Sending Item 6 Frag 4/5
-[SENDER] Item 6 Verified.
-[23:05:18.322] [SENDER] Sending Item 7 Frag 0/4
-[23:05:18.322] [SENDER] Sending Item 7 Frag 1/4
-[23:05:18.322] [SENDER] Sending Item 7 Frag 2/4
-[23:05:18.322] [SENDER] Sending Item 7 Frag 3/4
-[SENDER] Item 7 Verified.
-[23:05:18.323] [SENDER] Sending Item 8 Frag 0/2
-[23:05:18.323] [SENDER] Sending Item 8 Frag 1/2
-[SENDER] Timeout/NACK on Item 8 Frag 1. Retrying...
-[SENDER] Item 8 Verified.
-[23:05:20.340] [SENDER] Sending Item 9 Frag 0/2
-[23:05:20.341] [SENDER] Sending Item 9 Frag 1/2
-[SENDER] Item 9 Verified.
-[23:05:20.341] [SENDER] Sending Item 10 Frag 0/2
-[23:05:20.341] [SENDER] Sending Item 10 Frag 1/2
-[SENDER] Item 10 Verified.
-[23:05:20.341] [SENDER] Sending Item 11 Frag 0/4
-[23:05:20.341] [SENDER] Sending Item 11 Frag 1/4
-[SENDER] Timeout/NACK on Item 11 Frag 1. Retrying...
-[23:05:22.360] [SENDER] Sending Item 11 Frag 2/4
-[SENDER] Timeout/NACK on Item 11 Frag 2. Retrying...
-[SENDER] Timeout/NACK on Item 11 Frag 2. Retrying...
-[23:05:26.396] [SENDER] Sending Item 11 Frag 3/4
-[SENDER] Item 11 Verified.
-[23:05:26.397] [SENDER] Sending Item 12 Frag 0/1
-[SENDER] Item 12 Verified.
-[23:05:26.397] [SENDER] Sending Item 13 Frag 0/3
-[23:05:26.397] [SENDER] Sending Item 13 Frag 1/3
-[23:05:26.397] [SENDER] Sending Item 13 Frag 2/3
-[SENDER] Item 13 Verified.
-[23:05:26.397] [SENDER] Sending Item 14 Frag 0/4
-[23:05:26.397] [SENDER] Sending Item 14 Frag 1/4
-[23:05:26.397] [SENDER] Sending Item 14 Frag 2/4
-[23:05:26.397] [SENDER] Sending Item 14 Frag 3/4
-[SENDER] Item 14 Verified.
-[23:05:26.397] [SENDER] Sending Item 15 Frag 0/1
-[SENDER] Item 15 Verified.
-[23:05:26.398] [SENDER] Sending Item 16 Frag 0/2
-[23:05:26.398] [SENDER] Sending Item 16 Frag 1/2
-[SENDER] Item 16 Verified.
-[23:05:26.398] [SENDER] Sending Item 17 Frag 0/4
-[23:05:26.398] [SENDER] Sending Item 17 Frag 1/4
-[23:05:26.398] [SENDER] Sending Item 17 Frag 2/4
-[23:05:26.398] [SENDER] Sending Item 17 Frag 3/4
-[SENDER] Item 17 Verified.
-[23:05:26.398] [SENDER] Sending Item 18 Frag 0/4
-[23:05:26.398] [SENDER] Sending Item 18 Frag 1/4
-[23:05:26.398] [SENDER] Sending Item 18 Frag 2/4
-[23:05:26.398] [SENDER] Sending Item 18 Frag 3/4
-[SENDER] Item 18 Verified.
-[23:05:26.398] [SENDER] Sending Item 19 Frag 0/3
-[SENDER] Timeout/NACK on Item 19 Frag 0. Retrying...
-[23:05:28.417] [SENDER] Sending Item 19 Frag 1/3
-[SENDER] Timeout/NACK on Item 19 Frag 1. Retrying...
-[23:05:30.437] [SENDER] Sending Item 19 Frag 2/3
-[SENDER] Item 19 Verified.
-[SENDER] TEST COMPLETE - All items transferred successfully.
+1767809108.049793: [SENDER] Starting stress test with 20 items...
+1767809108.049811: [SENDER] Sending SYN...
+1767809108.151038: [SENDER] Rx Type: 32
+1767809108.151046: [SENDER] Handshake Complete!
+1767809108.151055: [SENDER] Sending Item 0 Frag 0/1
+1767809108.151153: [SENDER] Item 0 Verified.
+1767809108.151158: [SENDER] Sending Item 1 Frag 0/2
+1767809108.151253: [SENDER] Sending Item 1 Frag 1/2
+1767809108.151324: [SENDER] Item 1 Verified.
+1767809108.151329: [SENDER] Sending Item 2 Frag 0/1
+1767809108.151406: [SENDER] Item 2 Verified.
+1767809108.151414: [SENDER] Sending Item 3 Frag 0/3
+1767809110.172085: [SENDER] Timeout/NACK on Item 3 Frag 0. Retrying...
+1767809110.172394: [SENDER] Sending Item 3 Frag 1/3
+1767809110.172518: [SENDER] Sending Item 3 Frag 2/3
+1767809110.172622: [SENDER] Item 3 Verified.
+1767809110.172635: [SENDER] Sending Item 4 Frag 0/4
+1767809110.172731: [SENDER] Sending Item 4 Frag 1/4
+1767809110.172827: [SENDER] Sending Item 4 Frag 2/4
+1767809110.172927: [SENDER] Sending Item 4 Frag 3/4
+1767809110.173010: [SENDER] Item 4 Verified.
+1767809110.173020: [SENDER] Sending Item 5 Frag 0/3
+1767809110.173140: [SENDER] Sending Item 5 Frag 1/3
+1767809110.173270: [SENDER] Sending Item 5 Frag 2/3
+1767809112.189383: [SENDER] Timeout/NACK on Item 5 Frag 2. Retrying...
+1767809112.189574: [SENDER] Item 5 Verified.
+1767809112.189589: [SENDER] Sending Item 6 Frag 0/5
+1767809112.189699: [SENDER] Sending Item 6 Frag 1/5
+1767809112.189835: [SENDER] Sending Item 6 Frag 2/5
+1767809112.189934: [SENDER] Sending Item 6 Frag 3/5
+1767809112.190034: [SENDER] Sending Item 6 Frag 4/5
+1767809112.190097: [SENDER] Item 6 Verified.
+1767809112.190110: [SENDER] Sending Item 7 Frag 0/4
+1767809114.207616: [SENDER] Timeout/NACK on Item 7 Frag 0. Retrying...
+1767809114.207837: [SENDER] Sending Item 7 Frag 1/4
+1767809114.207960: [SENDER] Sending Item 7 Frag 2/4
+1767809114.208053: [SENDER] Sending Item 7 Frag 3/4
+1767809114.208150: [SENDER] Item 7 Verified.
+1767809114.208159: [SENDER] Sending Item 8 Frag 0/2
+1767809114.208261: [SENDER] Sending Item 8 Frag 1/2
+1767809116.224007: [SENDER] Timeout/NACK on Item 8 Frag 1. Retrying...
+1767809116.224193: [SENDER] Item 8 Verified.
+1767809116.224201: [SENDER] Sending Item 9 Frag 0/2
+1767809118.240040: [SENDER] Timeout/NACK on Item 9 Frag 0. Retrying...
+1767809118.240928: [SENDER] Sending Item 9 Frag 1/2
+1767809118.241160: [SENDER] Item 9 Verified.
+1767809118.241179: [SENDER] Sending Item 10 Frag 0/2
+1767809118.241619: [SENDER] Sending Item 10 Frag 1/2
+1767809118.241906: [SENDER] Item 10 Verified.
+1767809118.241944: [SENDER] Sending Item 11 Frag 0/4
+1767809118.242360: [SENDER] Sending Item 11 Frag 1/4
+1767809118.242586: [SENDER] Sending Item 11 Frag 2/4
+1767809118.242793: [SENDER] Sending Item 11 Frag 3/4
+1767809118.242935: [SENDER] Item 11 Verified.
+1767809118.242972: [SENDER] Sending Item 12 Frag 0/1
+1767809118.243129: [SENDER] Item 12 Verified.
+1767809118.243164: [SENDER] Sending Item 13 Frag 0/3
+1767809118.243421: [SENDER] Sending Item 13 Frag 1/3
+1767809118.243549: [SENDER] Sending Item 13 Frag 2/3
+1767809118.243657: [SENDER] Item 13 Verified.
+1767809118.243671: [SENDER] Sending Item 14 Frag 0/4
+1767809118.243787: [SENDER] Sending Item 14 Frag 1/4
+1767809118.243899: [SENDER] Sending Item 14 Frag 2/4
+1767809118.243983: [SENDER] Sending Item 14 Frag 3/4
+1767809118.244092: [SENDER] Item 14 Verified.
+1767809118.244097: [SENDER] Sending Item 15 Frag 0/1
+1767809118.244187: [SENDER] Item 15 Verified.
+1767809118.244193: [SENDER] Sending Item 16 Frag 0/2
+1767809118.244283: [SENDER] Sending Item 16 Frag 1/2
+1767809118.244379: [SENDER] Item 16 Verified.
+1767809118.244391: [SENDER] Sending Item 17 Frag 0/4
+1767809118.244480: [SENDER] Sending Item 17 Frag 1/4
+1767809118.244563: [SENDER] Sending Item 17 Frag 2/4
+1767809120.266563: [SENDER] Timeout/NACK on Item 17 Frag 2. Retrying...
+1767809120.266743: [SENDER] Sending Item 17 Frag 3/4
+1767809120.266866: [SENDER] Item 17 Verified.
+1767809120.266884: [SENDER] Sending Item 18 Frag 0/4
+1767809120.266998: [SENDER] Sending Item 18 Frag 1/4
+1767809120.267101: [SENDER] Sending Item 18 Frag 2/4
+1767809120.267201: [SENDER] Sending Item 18 Frag 3/4
+1767809120.267287: [SENDER] Item 18 Verified.
+1767809120.267296: [SENDER] Sending Item 19 Frag 0/3
+1767809120.267374: [SENDER] Sending Item 19 Frag 1/3
+1767809120.267480: [SENDER] Sending Item 19 Frag 2/3
+1767809122.287176: [SENDER] Timeout/NACK on Item 19 Frag 2. Retrying...
+1767809122.287426: [SENDER] Item 19 Verified.
+1767809122.287438: [SENDER] TEST COMPLETE - All items transferred successfully.
 
 ```
 ### Receiver Log
 ```
-[23:05:18.217] [RECEIVER] Listening...
-[RECEIVER] Read 24 bytes
-[RECEIVER] Synqed.
-[RECEIVER] Read 106 bytes
-[23:05:18.320] [RECEIVER] Completed Item 0 (Total: 1)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 25 bytes
-[23:05:18.320] [RECEIVER] Completed Item 1 (Total: 2)
-[RECEIVER] Read 103 bytes
-[23:05:18.320] [RECEIVER] Completed Item 2 (Total: 3)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:18.321] [RECEIVER] Completed Item 3 (Total: 4)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 77 bytes
-[23:05:18.321] [RECEIVER] Completed Item 4 (Total: 5)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 95 bytes
-[23:05:18.321] [RECEIVER] Completed Item 5 (Total: 6)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:18.322] [RECEIVER] Completed Item 6 (Total: 7)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 109 bytes
-[23:05:18.322] [RECEIVER] Completed Item 7 (Total: 8)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 54 bytes
-[23:05:18.323] [RECEIVER] Completed Item 8 (Total: 9)
-[RECEIVER] Read 54 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:20.341] [RECEIVER] Completed Item 9 (Total: 10)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 35 bytes
-[23:05:20.341] [RECEIVER] Completed Item 10 (Total: 11)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 31 bytes
-[23:05:26.397] [RECEIVER] Completed Item 11 (Total: 12)
-[RECEIVER] Read 88 bytes
-[23:05:26.397] [RECEIVER] Completed Item 12 (Total: 13)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 44 bytes
-[23:05:26.397] [RECEIVER] Completed Item 13 (Total: 14)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[23:05:26.397] [RECEIVER] Completed Item 14 (Total: 15)
-[RECEIVER] Read 106 bytes
-[23:05:26.397] [RECEIVER] Completed Item 15 (Total: 16)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 93 bytes
-[23:05:26.398] [RECEIVER] Completed Item 16 (Total: 17)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 99 bytes
-[23:05:26.398] [RECEIVER] Completed Item 17 (Total: 18)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 48 bytes
-[23:05:26.398] [RECEIVER] Completed Item 18 (Total: 19)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 135 bytes
-[23:05:30.437] [RECEIVER] Completed Item 19 (Total: 20)
+1767809108.043400: [RECEIVER] Listening...
+1767809108.151007: [RECEIVER] Synqed.
+1767809108.151141: [RECEIVER] Completed Item 0 (Total: 1)
+1767809108.151323: [RECEIVER] Completed Item 1 (Total: 2)
+1767809108.151392: [RECEIVER] Completed Item 2 (Total: 3)
+1767809110.172620: [RECEIVER] Completed Item 3 (Total: 4)
+1767809110.173006: [RECEIVER] Completed Item 4 (Total: 5)
+1767809110.173384: [RECEIVER] Completed Item 5 (Total: 6)
+1767809112.190089: [RECEIVER] Completed Item 6 (Total: 7)
+1767809114.208117: [RECEIVER] Completed Item 7 (Total: 8)
+1767809116.224164: [RECEIVER] Completed Item 8 (Total: 9)
+1767809118.241136: [RECEIVER] Completed Item 9 (Total: 10)
+1767809118.241890: [RECEIVER] Completed Item 10 (Total: 11)
+1767809118.242901: [RECEIVER] Completed Item 11 (Total: 12)
+1767809118.243095: [RECEIVER] Completed Item 12 (Total: 13)
+1767809118.243643: [RECEIVER] Completed Item 13 (Total: 14)
+1767809118.244083: [RECEIVER] Completed Item 14 (Total: 15)
+1767809118.244176: [RECEIVER] Completed Item 15 (Total: 16)
+1767809118.244370: [RECEIVER] Completed Item 16 (Total: 17)
+1767809120.266861: [RECEIVER] Completed Item 17 (Total: 18)
+1767809120.267269: [RECEIVER] Completed Item 18 (Total: 19)
+1767809120.267574: [RECEIVER] Completed Item 19 (Total: 20)
 
 ```
 
 ### T-003 Details
 ### Sender Log
 ```
-[23:05:31.474] [SENDER] Starting stress test with 20 items...
-[23:05:31.475] [SENDER] Sending SYN...
-[23:05:31.576] [SENDER] Rx Type: 32
-[23:05:31.576] [SENDER] Handshake Complete!
-[23:05:31.576] [SENDER] Sending Item 0 Frag 0/1
-[SENDER] Timeout/NACK on Item 0 Frag 0. Retrying...
-[SENDER] Item 0 Verified.
-[23:05:33.592] [SENDER] Sending Item 1 Frag 0/2
-[23:05:33.592] [SENDER] Sending Item 1 Frag 1/2
-[SENDER] Item 1 Verified.
-[23:05:33.592] [SENDER] Sending Item 2 Frag 0/1
-[SENDER] Item 2 Verified.
-[23:05:33.592] [SENDER] Sending Item 3 Frag 0/3
-[23:05:33.592] [SENDER] Sending Item 3 Frag 1/3
-[23:05:33.592] [SENDER] Sending Item 3 Frag 2/3
-[SENDER] Item 3 Verified.
-[23:05:33.593] [SENDER] Sending Item 4 Frag 0/4
-[23:05:33.593] [SENDER] Sending Item 4 Frag 1/4
-[23:05:33.593] [SENDER] Sending Item 4 Frag 2/4
-[23:05:33.593] [SENDER] Sending Item 4 Frag 3/4
-[SENDER] Item 4 Verified.
-[23:05:33.593] [SENDER] Sending Item 5 Frag 0/3
-[23:05:33.593] [SENDER] Sending Item 5 Frag 1/3
-[23:05:33.593] [SENDER] Sending Item 5 Frag 2/3
-[SENDER] Item 5 Verified.
-[23:05:33.593] [SENDER] Sending Item 6 Frag 0/5
-[23:05:33.593] [SENDER] Sending Item 6 Frag 1/5
-[23:05:33.593] [SENDER] Sending Item 6 Frag 2/5
-[23:05:33.593] [SENDER] Sending Item 6 Frag 3/5
-[23:05:33.593] [SENDER] Sending Item 6 Frag 4/5
-[SENDER] Item 6 Verified.
-[23:05:33.594] [SENDER] Sending Item 7 Frag 0/4
-[23:05:33.594] [SENDER] Sending Item 7 Frag 1/4
-[23:05:33.594] [SENDER] Sending Item 7 Frag 2/4
-[SENDER] Timeout/NACK on Item 7 Frag 2. Retrying...
-[23:05:35.611] [SENDER] Sending Item 7 Frag 3/4
-[SENDER] Item 7 Verified.
-[23:05:35.612] [SENDER] Sending Item 8 Frag 0/2
-[23:05:35.612] [SENDER] Sending Item 8 Frag 1/2
-[SENDER] Timeout/NACK on Item 8 Frag 1. Retrying...
-[SENDER] Item 8 Verified.
-[23:05:37.629] [SENDER] Sending Item 9 Frag 0/2
-[SENDER] Timeout/NACK on Item 9 Frag 0. Retrying...
-[23:05:39.645] [SENDER] Sending Item 9 Frag 1/2
-[SENDER] Item 9 Verified.
-[23:05:39.645] [SENDER] Sending Item 10 Frag 0/2
-[23:05:39.646] [SENDER] Sending Item 10 Frag 1/2
-[SENDER] Item 10 Verified.
-[23:05:39.646] [SENDER] Sending Item 11 Frag 0/4
-[SENDER] Timeout/NACK on Item 11 Frag 0. Retrying...
-[SENDER] Timeout/NACK on Item 11 Frag 0. Retrying...
-[23:05:43.675] [SENDER] Sending Item 11 Frag 1/4
-[23:05:43.675] [SENDER] Sending Item 11 Frag 2/4
-[23:05:43.675] [SENDER] Sending Item 11 Frag 3/4
-[SENDER] Item 11 Verified.
-[23:05:43.675] [SENDER] Sending Item 12 Frag 0/1
-[SENDER] Item 12 Verified.
-[23:05:43.676] [SENDER] Sending Item 13 Frag 0/3
-[23:05:43.676] [SENDER] Sending Item 13 Frag 1/3
-[23:05:43.676] [SENDER] Sending Item 13 Frag 2/3
-[SENDER] Item 13 Verified.
-[23:05:43.676] [SENDER] Sending Item 14 Frag 0/4
-[23:05:43.676] [SENDER] Sending Item 14 Frag 1/4
-[23:05:43.676] [SENDER] Sending Item 14 Frag 2/4
-[23:05:43.676] [SENDER] Sending Item 14 Frag 3/4
-[SENDER] Timeout/NACK on Item 14 Frag 3. Retrying...
-[SENDER] Item 14 Verified.
-[23:05:45.695] [SENDER] Sending Item 15 Frag 0/1
-[SENDER] Item 15 Verified.
-[23:05:45.696] [SENDER] Sending Item 16 Frag 0/2
-[23:05:45.696] [SENDER] Sending Item 16 Frag 1/2
-[SENDER] Item 16 Verified.
-[23:05:45.696] [SENDER] Sending Item 17 Frag 0/4
-[23:05:45.696] [SENDER] Sending Item 17 Frag 1/4
-[23:05:45.696] [SENDER] Sending Item 17 Frag 2/4
-[23:05:45.696] [SENDER] Sending Item 17 Frag 3/4
-[SENDER] Item 17 Verified.
-[23:05:45.696] [SENDER] Sending Item 18 Frag 0/4
-[23:05:45.696] [SENDER] Sending Item 18 Frag 1/4
-[SENDER] Timeout/NACK on Item 18 Frag 1. Retrying...
-[SENDER] Timeout/NACK on Item 18 Frag 1. Retrying...
-[23:05:49.731] [SENDER] Sending Item 18 Frag 2/4
-[SENDER] Timeout/NACK on Item 18 Frag 2. Retrying...
-[23:05:51.748] [SENDER] Sending Item 18 Frag 3/4
-[SENDER] Item 18 Verified.
-[23:05:51.749] [SENDER] Sending Item 19 Frag 0/3
-[23:05:51.749] [SENDER] Sending Item 19 Frag 1/3
-[23:05:51.749] [SENDER] Sending Item 19 Frag 2/3
-[SENDER] Item 19 Verified.
-[SENDER] TEST COMPLETE - All items transferred successfully.
+1767809123.317720: [SENDER] Starting stress test with 20 items...
+1767809123.317734: [SENDER] Sending SYN...
+1767809123.418972: [SENDER] Rx Type: 32
+1767809123.418979: [SENDER] Handshake Complete!
+1767809123.418990: [SENDER] Sending Item 0 Frag 0/1
+1767809125.437938: [SENDER] Timeout/NACK on Item 0 Frag 0. Retrying...
+1767809125.438159: [SENDER] Item 0 Verified.
+1767809125.438166: [SENDER] Sending Item 1 Frag 0/2
+1767809127.452879: [SENDER] Timeout/NACK on Item 1 Frag 0. Retrying...
+1767809127.453153: [SENDER] Sending Item 1 Frag 1/2
+1767809127.453373: [SENDER] Item 1 Verified.
+1767809127.453380: [SENDER] Sending Item 2 Frag 0/1
+1767809127.453498: [SENDER] Item 2 Verified.
+1767809127.453508: [SENDER] Sending Item 3 Frag 0/3
+1767809127.453623: [SENDER] Sending Item 3 Frag 1/3
+1767809129.470963: [SENDER] Timeout/NACK on Item 3 Frag 1. Retrying...
+1767809129.471322: [SENDER] Sending Item 3 Frag 2/3
+1767809131.491700: [SENDER] Timeout/NACK on Item 3 Frag 2. Retrying...
+1767809131.491896: [SENDER] Item 3 Verified.
+1767809131.491910: [SENDER] Sending Item 4 Frag 0/4
+1767809131.492192: [SENDER] Sending Item 4 Frag 1/4
+1767809131.492296: [SENDER] Sending Item 4 Frag 2/4
+1767809133.510816: [SENDER] Timeout/NACK on Item 4 Frag 2. Retrying...
+1767809133.511020: [SENDER] Sending Item 4 Frag 3/4
+1767809133.511155: [SENDER] Item 4 Verified.
+1767809133.511168: [SENDER] Sending Item 5 Frag 0/3
+1767809133.511426: [SENDER] Sending Item 5 Frag 1/3
+1767809135.528350: [SENDER] Timeout/NACK on Item 5 Frag 1. Retrying...
+1767809137.550344: [SENDER] Timeout/NACK on Item 5 Frag 1. Retrying...
+1767809137.550979: [SENDER] Sending Item 5 Frag 2/3
+1767809137.551172: [SENDER] Item 5 Verified.
+1767809137.551220: [SENDER] Sending Item 6 Frag 0/5
+1767809137.551521: [SENDER] Sending Item 6 Frag 1/5
+1767809137.551786: [SENDER] Sending Item 6 Frag 2/5
+1767809137.552048: [SENDER] Sending Item 6 Frag 3/5
+1767809137.552323: [SENDER] Sending Item 6 Frag 4/5
+1767809137.552494: [SENDER] Item 6 Verified.
+1767809137.552592: [SENDER] Sending Item 7 Frag 0/4
+1767809137.553024: [SENDER] Sending Item 7 Frag 1/4
+1767809137.553774: [SENDER] Sending Item 7 Frag 2/4
+1767809137.553913: [SENDER] Sending Item 7 Frag 3/4
+1767809137.554019: [SENDER] Item 7 Verified.
+1767809137.554040: [SENDER] Sending Item 8 Frag 0/2
+1767809137.554124: [SENDER] Sending Item 8 Frag 1/2
+1767809137.554222: [SENDER] Item 8 Verified.
+1767809137.554229: [SENDER] Sending Item 9 Frag 0/2
+1767809137.554318: [SENDER] Sending Item 9 Frag 1/2
+1767809137.554402: [SENDER] Item 9 Verified.
+1767809137.554420: [SENDER] Sending Item 10 Frag 0/2
+1767809137.554536: [SENDER] Sending Item 10 Frag 1/2
+1767809137.554607: [SENDER] Item 10 Verified.
+1767809137.554617: [SENDER] Sending Item 11 Frag 0/4
+1767809137.554714: [SENDER] Sending Item 11 Frag 1/4
+1767809137.554815: [SENDER] Sending Item 11 Frag 2/4
+1767809137.554942: [SENDER] Sending Item 11 Frag 3/4
+1767809137.555048: [SENDER] Item 11 Verified.
+1767809137.555053: [SENDER] Sending Item 12 Frag 0/1
+1767809137.555143: [SENDER] Item 12 Verified.
+1767809137.555157: [SENDER] Sending Item 13 Frag 0/3
+1767809137.555254: [SENDER] Sending Item 13 Frag 1/3
+1767809137.555338: [SENDER] Sending Item 13 Frag 2/3
+1767809137.555420: [SENDER] Item 13 Verified.
+1767809137.555432: [SENDER] Sending Item 14 Frag 0/4
+1767809137.555540: [SENDER] Sending Item 14 Frag 1/4
+1767809137.555647: [SENDER] Sending Item 14 Frag 2/4
+1767809137.555806: [SENDER] Sending Item 14 Frag 3/4
+1767809137.555901: [SENDER] Item 14 Verified.
+1767809137.555907: [SENDER] Sending Item 15 Frag 0/1
+1767809137.555987: [SENDER] Item 15 Verified.
+1767809137.555993: [SENDER] Sending Item 16 Frag 0/2
+1767809137.556085: [SENDER] Sending Item 16 Frag 1/2
+1767809139.576721: [SENDER] Timeout/NACK on Item 16 Frag 1. Retrying...
+1767809139.577164: [SENDER] Item 16 Verified.
+1767809139.577213: [SENDER] Sending Item 17 Frag 0/4
+1767809139.577555: [SENDER] Sending Item 17 Frag 1/4
+1767809139.579576: [SENDER] Sending Item 17 Frag 2/4
+1767809141.598818: [SENDER] Timeout/NACK on Item 17 Frag 2. Retrying...
+1767809141.599005: [SENDER] Sending Item 17 Frag 3/4
+1767809143.615117: [SENDER] Timeout/NACK on Item 17 Frag 3. Retrying...
+1767809143.615330: [SENDER] Item 17 Verified.
+1767809143.615348: [SENDER] Sending Item 18 Frag 0/4
+1767809143.615477: [SENDER] Sending Item 18 Frag 1/4
+1767809145.638544: [SENDER] Timeout/NACK on Item 18 Frag 1. Retrying...
+1767809145.638878: [SENDER] Sending Item 18 Frag 2/4
+1767809147.658675: [SENDER] Timeout/NACK on Item 18 Frag 2. Retrying...
+1767809147.659005: [SENDER] Sending Item 18 Frag 3/4
+1767809147.659152: [SENDER] Item 18 Verified.
+1767809147.659164: [SENDER] Sending Item 19 Frag 0/3
+1767809149.681868: [SENDER] Timeout/NACK on Item 19 Frag 0. Retrying...
+1767809149.682076: [SENDER] Sending Item 19 Frag 1/3
+1767809149.682195: [SENDER] Sending Item 19 Frag 2/3
+1767809149.682292: [SENDER] Item 19 Verified.
+1767809149.682298: [SENDER] TEST COMPLETE - All items transferred successfully.
 
 ```
 ### Receiver Log
 ```
-[23:05:31.472] [RECEIVER] Listening...
-[RECEIVER] Read 24 bytes
-[RECEIVER] Synqed.
-[RECEIVER] Read 106 bytes
-[23:05:33.592] [RECEIVER] Completed Item 0 (Total: 1)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 25 bytes
-[23:05:33.592] [RECEIVER] Completed Item 1 (Total: 2)
-[RECEIVER] Read 103 bytes
-[23:05:33.592] [RECEIVER] Completed Item 2 (Total: 3)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:33.592] [RECEIVER] Completed Item 3 (Total: 4)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 77 bytes
-[23:05:33.593] [RECEIVER] Completed Item 4 (Total: 5)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 95 bytes
-[23:05:33.593] [RECEIVER] Completed Item 5 (Total: 6)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:33.594] [RECEIVER] Completed Item 6 (Total: 7)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 109 bytes
-[23:05:35.612] [RECEIVER] Completed Item 7 (Total: 8)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 54 bytes
-[23:05:37.629] [RECEIVER] Completed Item 8 (Total: 9)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 17 bytes
-[23:05:39.645] [RECEIVER] Completed Item 9 (Total: 10)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 35 bytes
-[23:05:39.646] [RECEIVER] Completed Item 10 (Total: 11)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 31 bytes
-[23:05:43.675] [RECEIVER] Completed Item 11 (Total: 12)
-[RECEIVER] Read 88 bytes
-[23:05:43.676] [RECEIVER] Completed Item 12 (Total: 13)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 44 bytes
-[23:05:43.676] [RECEIVER] Completed Item 13 (Total: 14)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[23:05:45.695] [RECEIVER] Completed Item 14 (Total: 15)
-[RECEIVER] Read 106 bytes
-[23:05:45.695] [RECEIVER] Completed Item 15 (Total: 16)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 93 bytes
-[23:05:45.696] [RECEIVER] Completed Item 16 (Total: 17)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 99 bytes
-[23:05:45.696] [RECEIVER] Completed Item 17 (Total: 18)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 48 bytes
-[23:05:51.749] [RECEIVER] Completed Item 18 (Total: 19)
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 142 bytes
-[RECEIVER] Read 135 bytes
-[23:05:51.750] [RECEIVER] Completed Item 19 (Total: 20)
+1767809123.317559: [RECEIVER] Listening...
+1767809123.418941: [RECEIVER] Synqed.
+1767809123.419153: [RECEIVER] Completed Item 0 (Total: 1)
+1767809127.453344: [RECEIVER] Completed Item 1 (Total: 2)
+1767809127.453476: [RECEIVER] Completed Item 2 (Total: 3)
+1767809129.471410: [RECEIVER] Completed Item 3 (Total: 4)
+1767809133.511124: [RECEIVER] Completed Item 4 (Total: 5)
+1767809137.551133: [RECEIVER] Completed Item 5 (Total: 6)
+1767809137.552450: [RECEIVER] Completed Item 6 (Total: 7)
+1767809137.553997: [RECEIVER] Completed Item 7 (Total: 8)
+1767809137.554211: [RECEIVER] Completed Item 8 (Total: 9)
+1767809137.554396: [RECEIVER] Completed Item 9 (Total: 10)
+1767809137.554598: [RECEIVER] Completed Item 10 (Total: 11)
+1767809137.555038: [RECEIVER] Completed Item 11 (Total: 12)
+1767809137.555139: [RECEIVER] Completed Item 12 (Total: 13)
+1767809137.555396: [RECEIVER] Completed Item 13 (Total: 14)
+1767809137.555896: [RECEIVER] Completed Item 14 (Total: 15)
+1767809137.555978: [RECEIVER] Completed Item 15 (Total: 16)
+1767809139.577113: [RECEIVER] Completed Item 16 (Total: 17)
+1767809141.599100: [RECEIVER] Completed Item 17 (Total: 18)
+1767809147.659124: [RECEIVER] Completed Item 18 (Total: 19)
+1767809149.682286: [RECEIVER] Completed Item 19 (Total: 20)
 
 ```
