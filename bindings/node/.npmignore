@@ -1,0 +1,20 @@
+# Build artifacts
+build/
+*.log
+*.o
+
+# Prebuild cache (only ship the .node file)
+prebuilds/**/CMakeFiles/
+prebuilds/**/CMakeCache.txt
+prebuilds/**/*.ninja*
+prebuilds/**/*.cmake
+prebuilds/**/.ninja*
+
+# Source files not needed at runtime
+src/
+*.cpp
+
+# Development
+node_modules/
+.git/
+tests/
