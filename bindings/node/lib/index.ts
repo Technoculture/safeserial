@@ -166,3 +166,6 @@ export class DataBridge extends EventEmitter {
 }
 
 export default DataBridge;
+
+// Re-export resilient wrapper
+export { ResilientDataBridge, ResilientOptions, ResilientEvents } from './resilient';

@@ -63,11 +63,19 @@ npm run build
 ```
 
 ```typescript
-import { DataBridge } from '@aspect-labs/data-bridge';
+import { ResilientDataBridge } from '@aspect-labs/data-bridge';
 
-const bridge = await DataBridge.open('/dev/ttyUSB0');
-bridge.on('data', (data) => console.log('Received:', data));
-await bridge.send('Hello');
+// Connection survives USB disconnects
+const bridge = await ResilientDataBridge.open('/dev/ttyUSB0', {
+  reconnect: true,
+  reconnectDelay: 1000,
+});
+
+bridge.on('disconnect', () => console.log('Reconnecting...'));
+bridge.on('reconnected', () => console.log('Back online'));
+
+// Messages queue during disconnect and flush on reconnect
+await bridge.send('guaranteed-delivery');
 ```
 
 ---
