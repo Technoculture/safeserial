@@ -1,6 +1,6 @@
-#include "serial_port.hpp"
-#include "protocol/packet.hpp"
-#include "protocol/reassembler.hpp"
+#include <data_bridge/transport/serial_port.hpp>
+#include <data_bridge/protocol/packet.hpp>
+#include <data_bridge/protocol/reassembler.hpp>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -10,6 +10,14 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include <iomanip>
+
+static void log_timed(const std::string& msg) {
+    auto now = std::chrono::system_clock::now();
+    auto seconds = std::chrono::duration_cast<std::chrono::duration<double>>(now.time_since_epoch());
+    
+    std::cout << std::fixed << std::setprecision(6) << seconds.count() << ": " << msg << std::endl;
+}
 
 // Usage: 
 // 1. End-to-End: ./reliability_test <PORT> <MODE: sender|receiver> [ITEMS=100]
@@ -55,7 +63,7 @@ public:
         // Let's do per-write drop to match Python script
         if (data.size() > 0 && dist(rng) < drop) {
             // Dropped
-            std::cout << "[CHAOS] DROPPED " << data.size() << " bytes" << std::endl;
+            log_timed("[CHAOS] DROPPED " + std::to_string(data.size()) + " bytes");
             return data.size();
         }
 
@@ -63,7 +71,7 @@ public:
         if (dist(rng) < corrupt && processed.size() > 0) {
             int idx = rng() % processed.size();
             processed[idx] ^= (1 << (rng() % 8));
-            std::cout << "[CHAOS] CORRUPTED byte " << idx << std::endl;
+            log_timed("[CHAOS] CORRUPTED byte " + std::to_string(idx));
         }
 
         std::unique_lock<std::mutex> lock(mux);
@@ -83,13 +91,20 @@ private:
 
 
 void run_sender(ISerialPort& serial, int items) {
-    std::cout << "[SENDER] Starting stress test with " << items << " items..." << std::endl;
+    log_timed("[SENDER] Starting stress test with " + std::to_string(items) + " items...");
     uint8_t temp_buf[256];
     std::vector<uint8_t> rx_pool;
     
     // Handshake
     while(true) {
-        std::cout << "[SENDER] Sending SYN..." << std::endl;
+        log_timed("[SENDER] Sending SYN...");
+        
+        // Flush any garbage from startup or previous incomplete handshakes
+        int flushed = 0;
+        uint8_t garbage;
+        while(serial.read(&garbage, 1) > 0) flushed++;
+        if (flushed > 0) log_timed("[SENDER] Flushed " + std::to_string(flushed) + " bytes garbage.");
+
         serial.write(Packet::serialize(Packet::TYPE_SYN, 0, "TEST_START"));
         
         // Wait up to 5000ms for response, draining buffer
@@ -98,17 +113,22 @@ void run_sender(ISerialPort& serial, int items) {
         while(std::chrono::steady_clock::now() - start_wait < std::chrono::milliseconds(5000)) {
             int n = serial.read(temp_buf, 256);
             if (n > 0) {
-                std::cout << "[SENDER] Read " << n << " bytes" << std::endl;
+                // std::cout << "[SENDER] Read " << n << " bytes" << std::endl;
                 rx_pool.insert(rx_pool.end(), temp_buf, temp_buf+n);
+            } else if (n < 0) {
+                 std::cerr << "[SENDER] Read Error: " << n << " Errno: " << errno << std::endl;
+            } else {
+                 // 0 bytes (timeout) - verbose log?
+                 // std::cout << "." << std::flush; 
             }
             
             while(true) {
                 auto f = Packet::deserialize(rx_pool);
                 if (!f.valid) break; // Need more data
                 
-                std::cout << "[SENDER] Rx Type: " << (int)f.header.type << std::endl;
+                log_timed("[SENDER] Rx Type: " + std::to_string((int)f.header.type));
                 if (f.header.type == Packet::TYPE_ACK) {
-                    std::cout << "[SENDER] Handshake OK" << std::endl;
+                    log_timed("[SENDER] Handshake Complete!");
                     handshook = true;
                 }
             }
@@ -130,9 +150,11 @@ void run_sender(ISerialPort& serial, int items) {
         uint16_t total_frags = (len + frag_size - 1) / frag_size;
         
         // Send Fragments
+        uint8_t current_seq = (uint8_t)(i%256);
         for (uint16_t f=0; f < total_frags; ++f) {
+             log_timed("[SENDER] Sending Item " + std::to_string(current_seq) + " Frag " + std::to_string(f) + "/" + std::to_string(total_frags));
              std::string chunk = payload.substr(f*frag_size, std::min((size_t)frag_size, payload.size() - f*frag_size));
-             auto pkt = Packet::serialize(Packet::TYPE_DATA, (uint8_t)(i%256), chunk, f, total_frags);
+             auto pkt = Packet::serialize(Packet::TYPE_DATA, current_seq, chunk, f, total_frags);
              
              bool acked = false;
              while(!acked) {
@@ -152,16 +174,16 @@ void run_sender(ISerialPort& serial, int items) {
                      }
                      if (acked) break;
                  }
-                 if (!acked) std::cout << "[SENDER] Timeout/NACK on Item " << i << " Frag " << f << ". Retrying..." << std::endl;
+                 if (!acked) log_timed("[SENDER] Timeout/NACK on Item " + std::to_string(i) + " Frag " + std::to_string(f) + ". Retrying...");
              }
         }
-        std::cout << "[SENDER] Item " << i << " Verified." << std::endl;
+        log_timed("[SENDER] Item " + std::to_string(i) + " Verified.");
     }
-    std::cout << "[SENDER] TEST COMPLETE - All items transferred successfully." << std::endl;
+    log_timed("[SENDER] TEST COMPLETE - All items transferred successfully.");
 }
 
 void run_receiver(ISerialPort& serial) {
-    std::cout << "[RECEIVER] Listening..." << std::endl;
+    log_timed("[RECEIVER] Listening...");
     uint8_t temp_buf[256];
     std::vector<uint8_t> rx_pool;
     Reassembler reassembler;
@@ -171,7 +193,6 @@ void run_receiver(ISerialPort& serial) {
     while(true) {
         int n = serial.read(temp_buf, 256);
         if (n > 0) {
-             std::cout << "[RECEIVER] Read " << n << " bytes" << std::endl;
              rx_pool.insert(rx_pool.end(), temp_buf, temp_buf+n);
         }
         
@@ -181,15 +202,15 @@ void run_receiver(ISerialPort& serial) {
 
             if (frame.header.type == Packet::TYPE_SYN) {
                 serial.write(Packet::serialize(Packet::TYPE_ACK, 0, "OK"));
-                std::cout << "[RECEIVER] Synqed." << std::endl;
+                log_timed("[RECEIVER] Synqed.");
             }
             else if (frame.header.type == Packet::TYPE_DATA) {
                 if (reassembler.process_fragment(frame)) {
                     serial.write(Packet::serialize(Packet::TYPE_ACK, frame.header.seq_id, ""));
                     if (reassembler.is_complete(frame)) {
                         items_received++;
-                        std::cout << "[RECEIVER] Completed Item " << (int)frame.header.seq_id 
-                                  << " (Total: " << items_received << ")" << std::endl;
+                        log_timed("[RECEIVER] Completed Item " + std::to_string((int)frame.header.seq_id) 
+                                  + " (Total: " + std::to_string(items_received) + ")");
                     }
                 } else {
                      // Duplicates or Old: standard is just ACK again so sender stops

@@ -1,6 +1,6 @@
-#include "serial_port.hpp"
-#include "protocol/packet.hpp"
-#include "protocol/reassembler.hpp"
+#include <data_bridge/transport/serial_port.hpp>
+#include <data_bridge/protocol/packet.hpp>
+#include <data_bridge/protocol/reassembler.hpp>
 #include <iostream>
 #include <thread>
 #include <vector>

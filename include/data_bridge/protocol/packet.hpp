@@ -5,7 +5,7 @@
 #include <utility>
 #include <cstring>
 #include <algorithm>
-#include "crc32.hpp"
+#include <data_bridge/protocol/crc32.hpp>
 
 struct Packet {
     // Deleted legacy markers

@@ -2,74 +2,107 @@
 import matplotlib.pyplot as plt
 import sys
 import re
+import numpy as np
 
-def parse_log(log_content):
+def parse_logs(log_content):
     events = []
-    chaos_events = []
     
-    # Simple discrete time model: each log line is a tick? 
-    # Or just index events. Let's index events.
+    # Matches float_ts: msg
+    pattern = re.compile(r"(\d+\.\d+): (.*)")
     
-    event_idx = 0
-    completed_items = 0
+    base_time = None
     
-    for line in log_content.splitlines():
-        event_idx += 1
+    # Track cycle count and item offsets
+    cycle_count = -1
+    item_offset = 0
+    
+    lines = log_content.splitlines()
+    for line in lines:
+        m = pattern.search(line)
+        if not m: continue
         
-        if "[CHAOS] DROPPED" in line:
-            chaos_events.append((event_idx, "DROP"))
-        elif "[CHAOS] CORRUPTED" in line:
-            chaos_events.append((event_idx, "CORRUPT"))
-        elif "Completed Item" in line:
-            completed_items += 1
-            events.append((event_idx, completed_items))
-            
-    return events, chaos_events
-
-def plot_results(log_content, output_file="reliability_plot.png"):
-    data_events, chaos_events = parse_log(log_content)
-    
-    if not data_events:
-        print("No data events found to plot")
-        return
-
-    x_data = [x[0] for x in data_events]
-    y_data = [x[1] for x in data_events]
-    
-    plt.figure(figsize=(10, 6))
-    
-    # Plot Successful Transfers
-    plt.plot(x_data, y_data, label=f"Successful API Calls ({y_data[-1]} Total)", color='green', linewidth=2)
-    
-    # Plot Chaos
-    drops_x = [x[0] for x in chaos_events if x[1] == "DROP"]
-    drops_y = [0] * len(drops_x) # Plot at bottom
-    
-    corrupt_x = [x[0] for x in chaos_events if x[1] == "CORRUPT"]
-    corrupt_y = [0] * len(corrupt_x)
-    
-    if drops_x:
-        plt.scatter(drops_x, [y_data[-1] * 0.05] * len(drops_x), marker='x', color='red', label='Packet Drops', alpha=0.6)
+        ts = float(m.group(1))
+        msg = m.group(2)
         
-    if corrupt_x:
-        plt.scatter(corrupt_x, [y_data[-1] * 0.1] * len(corrupt_x), marker='*', color='orange', label='Bit Corruption', alpha=0.6, s=100)
+        if base_time is None: base_time = ts
+        rel_ts = ts - base_time
+        
+        # Detect new cycle to offset item IDs
+        if "Starting stress test" in msg:
+            cycle_count += 1
+            item_offset = cycle_count * 20
+        
+        # Extract events
+        if "Sending Item" in msg:
+            m_item = re.search(r"Item (\d+)", msg)
+            if m_item:
+                idx = int(m_item.group(1)) + item_offset
+                events.append({"ts": rel_ts, "type": "START", "id": idx})
+        elif "Verified" in msg or "Sent Successfully" in msg:
+            m_item = re.search(r"Item (\d+)", msg)
+            if m_item:
+                idx = int(m_item.group(1)) + item_offset
+                events.append({"ts": rel_ts, "type": "SUCCESS", "id": idx})
+        elif "Timeout/NACK" in msg:
+            m_item = re.search(r"Item (\d+)", msg)
+            if m_item:
+                idx = int(m_item.group(1)) + item_offset
+                events.append({"ts": rel_ts, "type": "RETRY", "id": idx})
+        elif "DROPPED" in msg:
+             # Associate with the likely current item offset
+             events.append({"ts": rel_ts, "type": "DROP", "id": item_offset}) 
+        elif "CORRUPTED" in msg:
+             events.append({"ts": rel_ts, "type": "CORRUPT", "id": item_offset})
 
-    plt.title("System Resilience: Valid Transfers vs Injected Faults")
-    plt.xlabel("Test Event Timeline")
-    plt.ylabel("Cumulative Successful Transactions")
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
+    return events
+
+def plot_xkcd(events, output="reliability_plot.png"):
+    plt.xkcd()
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    success_ts = [e["ts"] for e in events if e["type"] == "SUCCESS"]
+    success_id = [e["id"] for e in events if e["type"] == "SUCCESS"]
+    
+    retry_ts = [e["ts"] for e in events if e["type"] == "RETRY"]
+    retry_id = [e["id"] for e in events if e["type"] == "RETRY"]
+    
+    drop_ts = [e["ts"] for e in events if e["type"] == "DROP"]
+    drop_id = [e["id"] for e in events if e["type"] == "DROP"]
+    
+    corrupt_ts = [e["ts"] for e in events if e["type"] == "CORRUPT"]
+    corrupt_id = [e["id"] for e in events if e["type"] == "CORRUPT"]
+
+    print(f"Plotting: {len(success_ts)} Success markers found.")
+
+    if success_ts:
+        ax.plot(success_ts, success_id, 'g-', alpha=0.3)
+        ax.scatter(success_ts, success_id, color='green', marker='o', s=50, label="Confirmed Delivery", zorder=5)
+    
+    if retry_ts:
+        ax.scatter(retry_ts, retry_id, color='orange', marker='x', s=100, label="Protocol Healing", zorder=4)
+    
+    # Offset chaos markers slightly to be visible even if many on same item
+    if drop_ts:
+        ax.scatter(drop_ts, [i + 0.5 for i in drop_id], color='red', marker='v', s=80, label="Packet Loss", alpha=0.6)
+    
+    if corrupt_ts:
+        ax.scatter(corrupt_ts, [i - 0.5 for i in corrupt_id], color='purple', marker='*', s=120, label="Bit Inversion", alpha=0.6)
+
+    ax.set_title("Data Bridge Reliability Timeline")
+    ax.set_xlabel("Time (seconds)")
+    ax.set_ylabel("Transaction Sequence (Cumulative)")
+    ax.legend(loc='upper left', frameon=False)
     
     plt.tight_layout()
-    plt.savefig(output_file)
-    print(f"Generated plot: {output_file}")
+    plt.savefig(output, dpi=150)
+    plt.close()
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python visualize_results.py <logfile>")
-        sys.exit(1)
+    if len(sys.argv) < 2: sys.exit(1)
+    with open(sys.argv[1], 'r') as f: content = f.read()
+    events = parse_logs(content)
+    if not events:
+        print("No events found in logs!")
+        sys.exit(0)
         
-    with open(sys.argv[1], 'r') as f:
-        content = f.read()
-        
-    plot_results(content)
+    plot_xkcd(events, "reliability_plot.png")

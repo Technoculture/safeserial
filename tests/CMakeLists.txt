@@ -1,2 +1,2 @@
 add_executable(reliability_test reliability_test.cpp)
-target_link_libraries(reliability_test PRIVATE transport_lib common_lib)
+target_link_libraries(reliability_test PRIVATE data_bridge)

@@ -1,4 +1,4 @@
-#include "serial_port.hpp"
+#include <data_bridge/transport/serial_port.hpp>
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -24,24 +24,23 @@ bool SerialPort::open(const std::string& port, int baud) {
     cfsetispeed(&tty, B115200);
 
     // RAW MODE - Essential for binary/JSON data
-    tty.c_cflag |= (CLOCAL | CREAD);    
-    tty.c_cflag &= ~CSIZE;
-    tty.c_cflag |= CS8;         // 8-bit characters
-    tty.c_cflag &= ~PARENB;      // No parity
-    tty.c_cflag &= ~CSTOPB;      // 1 stop bit
+    cfmakeraw(&tty);
+    tty.c_cflag |= (CLOCAL | CREAD);
     
-    tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Disable buffering
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY);         // Disable flow control
-    tty.c_oflag &= ~OPOST;                          // Raw output
+    // Explicitly disable flow control just in case cfmakeraw doesn't (it should)
+    tty.c_cflag &= ~CRTSCTS;
 
     tty.c_cc[VMIN]  = 0;  // Non-blocking
     tty.c_cc[VTIME] = 1;  // 0.1 second timeout (faster polling)
 
+    tcflush(pimpl->fd, TCIOFLUSH); // Flush on open to clear old buffer garbage
     return tcsetattr(pimpl->fd, TCSANOW, &tty) == 0;
 }
 
 int SerialPort::write(const std::vector<uint8_t>& data) {
-    return ::write(pimpl->fd, data.data(), data.size());
+    int written = ::write(pimpl->fd, data.data(), data.size());
+    tcdrain(pimpl->fd); // Ensure data is transmitted
+    return written;
 }
 
 int SerialPort::read(uint8_t* buffer, size_t size) {
