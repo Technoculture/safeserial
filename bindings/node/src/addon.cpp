@@ -34,6 +34,7 @@ private:
     std::atomic<bool> is_open_{false};
     std::atomic<bool> should_stop_{false};
     std::thread receive_thread_;
+    uint8_t seq_id_ = 0;  // Per-instance sequence ID
     
     // Thread-safe receive callback
     Napi::ThreadSafeFunction tsfn_;
@@ -129,11 +130,9 @@ Napi::Value DataBridgeWrapper::Send(const Napi::CallbackInfo& info) {
         return env.Undefined();
     }
     
-    // Sequence ID (could be managed internally)
-    static uint8_t seq_id = 0;
-    
     // Serialize and send with fragmentation
-    auto packet = Packet::serialize(Packet::TYPE_DATA, seq_id++, payload);
+    // Sequence ID is managed per-instance
+    auto packet = Packet::serialize(Packet::TYPE_DATA, seq_id_++, payload);
     
     Napi::Promise::Deferred deferred = Napi::Promise::Deferred::New(env);
     

@@ -2,7 +2,6 @@
 #include <data_bridge/protocol/packet.hpp>
 #include <vector>
 #include <iostream>
-#include <map>
 
 class Reassembler {
 public:

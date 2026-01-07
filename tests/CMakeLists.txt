@@ -1,2 +1,10 @@
 add_executable(reliability_test reliability_test.cpp)
 target_link_libraries(reliability_test PRIVATE data_bridge)
+
+# Deep verification tests (requires GoogleTest)
+find_package(GTest QUIET)
+if(GTest_FOUND)
+    add_executable(test_deep_verification test_deep_verification.cpp)
+    target_link_libraries(test_deep_verification PRIVATE data_bridge GTest::gtest GTest::gtest_main)
+    add_test(NAME DeepVerification COMMAND test_deep_verification)
+endif()

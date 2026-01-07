@@ -6,12 +6,25 @@
 #include <cstring>
 #include <algorithm>
 #include <data_bridge/protocol/crc32.hpp>
+#include <data_bridge/config.hpp>
+
+// Cross-platform packed struct support
+#if defined(_MSC_VER)
+#define PACKED_STRUCT_BEGIN __pragma(pack(push, 1))
+#define PACKED_STRUCT_END __pragma(pack(pop))
+#define PACKED_ATTR
+#elif defined(__GNUC__) || defined(__clang__)
+#define PACKED_STRUCT_BEGIN
+#define PACKED_STRUCT_END
+#define PACKED_ATTR __attribute__((packed))
+#else
+#define PACKED_STRUCT_BEGIN
+#define PACKED_STRUCT_END
+#define PACKED_ATTR
+#endif
 
 struct Packet {
-    // Deleted legacy markers
-    // static constexpr uint8_t SOF = 0x02;
-    // static constexpr uint8_t EOF_MARKER = 0x03;
-    
+    PACKED_STRUCT_BEGIN
     struct Header {
         uint8_t  type;
         uint8_t  seq_id;
@@ -19,7 +32,8 @@ struct Packet {
         uint16_t total_frags;
         uint16_t payload_len;
         uint32_t crc32;
-    } __attribute__((packed));
+    } PACKED_ATTR;
+    PACKED_STRUCT_END
 
     // Packet Types
     static constexpr uint8_t TYPE_DATA = 0x10;
@@ -29,6 +43,11 @@ struct Packet {
     
     // COBS delimiter
     static constexpr uint8_t COBS_DELIMITER = 0x00;
+
+    // Configuration accessors (use env vars or defaults)
+    static uint8_t maxRetries() { return DataBridgeConfig::maxRetries(); }
+    static uint16_t retryTimeoutMs() { return DataBridgeConfig::retryTimeoutMs(); }
+    static uint16_t fragmentSize() { return DataBridgeConfig::fragmentSize(); }
 
     struct Frame {
         Header header;
@@ -103,19 +122,12 @@ struct Packet {
         std::memcpy(raw_packet.data(), &header, sizeof(Header));
         std::memcpy(raw_packet.data() + sizeof(Header), payload.data(), payload.size());
 
-        // Calculate CRC32 of Header + Payload
-        // We set CRC field to 0 before calculating, then fill it
-        // Re-calculate directly on buffer mostly safe since Header is POD
-        // Ideally we'd zero the crc32 field in the buffer, but it's already 0 from memcpy
+        // Calculate CRC32 of Header + Payload (with CRC field zeroed)
         uint32_t crc = CRC32::calculate(raw_packet.data(), raw_packet.size());
         
-        // Put CRC back into the structural position
-        // Warning: This implies the receiver knows where CRC is. 
-        // Better way: Calculate CRC excluding the CRC field itself? 
-        // Standard approach: CRC covers the entire frame.
-        // Let's rewrite the header with the CRC
+        // Update header with calculated CRC
         header.crc32 = crc;
-        std::memcpy(raw_packet.data(), &header, sizeof(Header)); // Update header in buffer
+        std::memcpy(raw_packet.data(), &header, sizeof(Header));
 
         // Encode with COBS
         std::vector<uint8_t> encoded = cobs_encode(raw_packet);
@@ -143,7 +155,6 @@ struct Packet {
         if (decoded.size() != sizeof(Header) + header.payload_len) return {{}, {}, false};
 
         // Validate CRC
-        // Extract received CRC
         uint32_t received_crc = header.crc32;
         
         // Zero out CRC in buffer to recompute
@@ -154,8 +165,8 @@ struct Packet {
         
         if (received_crc == computed_crc) {
             std::vector<uint8_t> payload(decoded.begin() + sizeof(Header), decoded.end());
-             // retreive original header
-             header.crc32 = received_crc; 
+            // Retrieve original header
+            header.crc32 = received_crc; 
             return {header, payload, true};
         }
 
