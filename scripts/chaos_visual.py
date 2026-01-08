@@ -17,6 +17,7 @@ import time
 import json
 import sys
 import threading
+from typing import Union
 from collections import deque
 
 try:
@@ -130,7 +131,11 @@ class ChaosBridge:
 
 import argparse
 
-def generate_payload(target_len: int) -> dict:
+def generate_payload(target_len: int) -> Union[dict, bytes]:
+    # Use simple bytes for small payloads
+    if target_len < 100:
+        return b'x' * target_len
+        
     # Generate a complex JSON structure approx target_len bytes
     items = []
     # Dynamic item count roughly based on length (200 bytes per item approx)
@@ -203,18 +208,19 @@ def main():
     # Import DataBridge
     try:
         import data_bridge
-        import data_bridge._core
         console.print("[green]✓ DataBridge imported successfully[/]")
-        console.print(f"[dim]Module: {data_bridge._core.__file__}[/]")
-        console.print(f"[dim]Reassembler attrs: {[x for x in dir(data_bridge._core.Reassembler) if not x.startswith('__')]}[/]")
     except ImportError as e:
         console.print(f"[red]✗ Failed to import data_bridge: {e}[/]")
         return
     
     # Create payload
-    payload = generate_payload(args.len)
-    payload_bytes = json.dumps(payload, indent=2).encode() # Pretty print for diff readability
-    console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes (Complex JSON)")
+    raw_payload = generate_payload(args.len)
+    if isinstance(raw_payload, dict):
+        payload_bytes = json.dumps(raw_payload, indent=2).encode()
+        console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes (Complex JSON)")
+    else:
+        payload_bytes = raw_payload
+        console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes (Raw Data)")
     
     # Start bridge
     bridge = ChaosBridge()
@@ -270,7 +276,6 @@ def main():
             elapsed = time.time() - start_time
             
             # Get real-time progress
-            # Note: We need to check if method exists (in case user runs old lib)
             curr_bytes = 0
             if hasattr(receiver, 'get_received_bytes'):
                 curr_bytes = receiver.get_received_bytes()
@@ -297,33 +302,45 @@ def main():
         import difflib
         
         try:
+             # Try JSON verify first
              recv_payload = json.loads(received_bytes.decode())
-             if recv_payload == payload:
+             if isinstance(raw_payload, dict) and recv_payload == raw_payload:
                 console.print(f"\n[bold green]✓ SUCCESS! JSON payload verified perfectly![/]")
                 console.print(f"[green]Transferred {len(payload_bytes)} bytes in {elapsed:.2f}s[/]")
                 console.print(f"[green]Recovered from {stats['drop']} drops and {stats['corrupt']} corruptions[/]")
              else:
-                console.print(f"\n[bold red]✗ JSON MISMATCH[/]")
-                # Compute diff
-                expected_lines = json.dumps(payload, indent=2).splitlines()
-                received_lines = json.dumps(recv_payload, indent=2).splitlines()
-                
-                diff = difflib.unified_diff(expected_lines, received_lines, fromfile='Sent', tofile='Received', lineterm='')
-                console.print("\n[bold]Diff:[/]")
-                for line in diff:
-                    if line.startswith('+'):
-                        console.print(f"[green]{line}[/]")
-                    elif line.startswith('-'):
-                        console.print(f"[red]{line}[/]")
-                    elif line.startswith('^'):
-                        console.print(f"[yellow]{line}[/]")
-                    else:
-                        console.print(line)
-        except json.JSONDecodeError:
-            console.print(f"\n[bold red]✗ FAILED TO DECODE RECEIVED JSON[/]")
-            console.print(f"[red]Sent {len(payload_bytes)} bytes, received {len(received_bytes)} bytes[/]")
-            if received_bytes != payload_bytes:
-                 console.print("[red]Binary mismatch![/]")
+                # JSON but mismatch
+                 raise ValueError("JSON Mismatch")
+                 
+        except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+            # Fallback to binary check
+            if received_bytes == payload_bytes:
+                 console.print(f"\n[bold green]✓ SUCCESS! Binary payload verified perfectly![/]")
+                 console.print(f"[green]Transferred {len(payload_bytes)} bytes in {elapsed:.2f}s[/]")
+                 console.print(f"[green]Recovered from {stats['drop']} drops and {stats['corrupt']} corruptions[/]")
+            else:
+                console.print(f"\n[bold red]✗ DATA MISMATCH[/]")
+                console.print(f"[red]Sent {len(payload_bytes)} bytes, received {len(received_bytes)} bytes[/]")
+                if isinstance(raw_payload, dict):
+                     # If we expected JSON but got here, show diff if possible
+                     try:
+                         recv_payload = json.loads(received_bytes.decode())
+                         expected_lines = json.dumps(raw_payload, indent=2).splitlines()
+                         received_lines = json.dumps(recv_payload, indent=2).splitlines()
+                         diff = difflib.unified_diff(expected_lines, received_lines, fromfile='Sent', tofile='Received', lineterm='')
+                         console.print("\n[bold]Diff:[/]")
+                         for line in diff:
+                             if line.startswith('+'): console.print(f"[green]{line}[/]")
+                             elif line.startswith('-'): console.print(f"[red]{line}[/]")
+                             elif line.startswith('^'): console.print(f"[yellow]{line}[/]")
+                             else: console.print(line)
+                     except:
+                         pass # Binary mismatch, no diff
+                else:
+                    # Raw diff limit
+                    if len(payload_bytes) < 100:
+                         console.print(f"Sent: {payload_bytes.hex()}")
+                         console.print(f"Recv: {received_bytes.hex()}")
     else:
         console.print(f"\n[bold red]✗ NO DATA RECEIVED[/]")
     
