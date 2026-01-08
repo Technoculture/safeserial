@@ -1,0 +1,4 @@
+src_cpp/
+include_cpp/
+src/data_bridge/__pycache__/
+bindings/python/.venv/

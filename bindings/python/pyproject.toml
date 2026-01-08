@@ -1,0 +1,22 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "pybind11", "cmake"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "data_bridge"
+version = "0.1.1"
+description = "Python bindings for Data Bridge SDK"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{ name = "Satyam Tiwary", email = "satyam@example.com" }]
+license = { text = "MIT" }
+dependencies = [
+    "rich>=14.2.0",
+    "textual>=0.73.0",
+    "pytest>=7.0.0",
+]
+
+[tool.scikit-build]
+cmake.version = "CMakeLists.txt"
+cmake.build-type = "Release"
+sdist.include = ["src_cpp", "include_cpp"]
