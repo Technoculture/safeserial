@@ -1,11 +1,11 @@
-# @aspect-labs/data-bridge
+# @technoculture/data-bridge
 
 Guaranteed reliable serial communication for Node.js and Electron.
 
 ## Installation
 
 ```bash
-npm install @aspect-labs/data-bridge
+npm install @technoculture/data-bridge
 ```
 
 Pre-built binaries are included for Windows and Linux (x64, arm64).
@@ -13,7 +13,7 @@ Pre-built binaries are included for Windows and Linux (x64, arm64).
 ## Usage
 
 ```typescript
-import { DataBridge } from '@aspect-labs/data-bridge';
+import { DataBridge } from '@technoculture/data-bridge';
 
 // Open a serial port
 const bridge = await DataBridge.open('/dev/ttyUSB0', { baudRate: 115200 });
