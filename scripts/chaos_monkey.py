@@ -259,18 +259,8 @@ if __name__ == "__main__":
         delete_rate=0.005,
         latency_spike_rate=0.01,
         disconnect_rate=0.001,
-        baud_rate=0 # Disable baud simulation for C++ tests by default unless requested? C++ tests expect fast pipe? 
-        # Actually verify_reliability.py invokes this.
-        # C++ tests interact with it. 
-        # We should keep baud_rate 0 (unlimited) for C++ tests to avoid slowing them down too much unless intended.
-        # Default arg is 115200 in init, but main should probably override or verification suite.
-        # The prompt says verification suite runs it.
-        # The verification suite doesn't pass baud rate.
-        # So I should default baud_rate to 0 in main, or update init to default 0?
-        # chaos_visual uses 115200.
-        # Let's default init to 0 (infinity/pipe speed) to preserve C++ test behavior, and chaos_visual will explicitly set 115200.
+        # Use unlimited baud (0) by default for C++ tests; other tools (e.g. chaos_visual) can override.
+        baud_rate=0,
     )
-    # Re-instating default init to 0 for baud to match legacy behavior for C++ tests
-    monkey.baud_rate = 0 
     
     monkey.run()
