@@ -108,7 +108,7 @@ class ChaosMonkey:
             if self.baud_rate > 0:
                 bytes_per_sec = self.baud_rate / 10.0
                 wire_duration = len(data) / bytes_per_sec
-                if wire_duration > 0.001:
+                if wire_duration > 0:
                     time.sleep(wire_duration)
 
             data_list = bytearray(data)
