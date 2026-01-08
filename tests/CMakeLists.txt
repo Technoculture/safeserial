@@ -2,7 +2,6 @@ add_executable(reliability_test reliability_test.cpp)
 target_link_libraries(reliability_test PRIVATE data_bridge)
 
 # Deep verification tests (requires GoogleTest)
-# Deep verification tests (requires GoogleTest)
 include(FetchContent)
 FetchContent_Declare(
   googletest
