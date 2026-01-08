@@ -56,26 +56,42 @@ bridge.on('disconnect', () => console.log('Queuing messages...'));
 bridge.on('reconnected', () => console.log('Flushed!'));
 ```
 
-## Build
+## Building & Verification
 
+We use `bridge.py`, a unified CLI tool for building, testing, and verifying the entire stack.
+
+### 1. Build Everything
+Builds C++ core, Python environment, and Node bindings.
 ```bash
-# C++ library
-mkdir build && cd build && cmake .. && make
-
-# Node.js bindings
-cd bindings/node && npm install && npm run build
+python bridge.py build
 ```
 
-## Verification
-
-We torture-test the protocol:
+### 2. Run Tests
+Runs unit tests for C++, Python, and Node, plus the system verification suite.
 ```bash
-uv run --with matplotlib python tests/verification_suite.py
+python bridge.py test all
 ```
 
-60 transactions × 10% packet loss × 2% byte corruption = **Zero data loss.**
+### 3. Verify Reliability (ISO Compliance)
+Runs the automated reliability claim suite against `chaos_monkey.py`.
+```bash
+python bridge.py test verify
+# Report generated at docs/test_report.md
+```
 
-![Fault Tolerance Test Results](test_timeline.png)
+### 4. Interactive Chaos Visualizer
+Launch the live TUI to see the ARQ protocol fight through packet loss and corruption.
+```bash
+python bridge.py test chaos -- --drop 0.1 --corrupt 0.05
+```
+
+### 5. Generate Reports
+Regenerate plots and reports from previous test runs.
+```bash
+python bridge.py viz
+```
+
+![Fault Tolerance Test Results](docs/test_timeline.png)
 
 ---
 

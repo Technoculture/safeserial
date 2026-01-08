@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+"""
+Data Bridge - Universal CLI (bridge.py)
+
+A single entry point for all project tasks: building, testing, verifying, and visualizing.
+
+Usage:
+    python bridge.py build          # Build C++, Python, Node
+    python bridge.py test verify    # Run reliability verification suite (ISO claim)
+    python bridge.py test chaos     # Run interactive chaos visualizer (Live UI)
+    python bridge.py test unit      # Run C++ unit tests
+    python bridge.py viz            # Generate charts from test data
+    python bridge.py clean          # Clean all artifacts
+"""
+
+import os
+import sys
+import shutil
+import argparse
+import subprocess
+from pathlib import Path
+
+# --- Configuration ---
+SCRIPT_DIR = Path(__file__).parent.resolve()
+PROJECT_ROOT = SCRIPT_DIR
+BUILD_DIR = PROJECT_ROOT / "build"
+NODE_DIR = PROJECT_ROOT / "bindings" / "node"
+PYTHON_BINDING_DIR = PROJECT_ROOT / "bindings" / "python"
+SCRIPTS_DIR = PROJECT_ROOT / "scripts"
+
+# --- Colors ---
+GREEN = "\033[92m" if sys.platform != "win32" or os.environ.get("TERM") else ""
+YELLOW = "\033[93m" if sys.platform != "win32" or os.environ.get("TERM") else ""
+RED = "\033[91m" if sys.platform != "win32" or os.environ.get("TERM") else ""
+BLUE = "\033[94m" if sys.platform != "win32" or os.environ.get("TERM") else ""
+NC = "\033[0m" if sys.platform != "win32" or os.environ.get("TERM") else ""
+
+def log(msg: str):
+    print(f"{GREEN}[BRIDGE]{NC} {msg}")
+
+def warn(msg: str):
+    print(f"{YELLOW}[WARN]{NC} {msg}")
+
+def error(msg: str):
+    print(f"{RED}[ERROR]{NC} {msg}")
+    sys.exit(1)
+
+def info(msg: str):
+    print(f"{BLUE}[INFO]{NC} {msg}")
+
+def get_cpu_count() -> int:
+    try:
+        return os.cpu_count() or 4
+    except:
+        return 4
+
+def run(cmd: list[str], cwd: Path = PROJECT_ROOT, check: bool = True, title: str = None) -> bool:
+    """Run a command with optional title logging."""
+    if title:
+        info(title)
+    
+    cmd_str = " ".join(cmd)
+    # print(f"DEBUG: Executing '{cmd_str}' in {cwd}") # Verbose debug
+    
+    try:
+        subprocess.run(cmd, cwd=cwd, check=check)
+        return True
+    except subprocess.CalledProcessError as e:
+        if check:
+            error(f"Command failed: {cmd_str}\n{e}")
+        return False
+    except FileNotFoundError:
+        warn(f"Command not found: {cmd[0]}")
+        return False
+    except KeyboardInterrupt:
+        print("\nInterrupted.")
+        sys.exit(130)
+
+def uv_run(args: list[str], cwd: Path = PROJECT_ROOT):
+    """Run a command using 'uv run' within the python binding project context."""
+    uv = shutil.which("uv")
+    if not uv:
+        error("'uv' is required but not found in PATH.")
+        
+    cmd = [uv, "run", "--project", str(PYTHON_BINDING_DIR)] + args
+    run(cmd, cwd=cwd, check=True)
+
+# --- Tasks ---
+
+def task_build(args):
+    """Build everything."""
+    log("Building C++ Library...")
+    BUILD_DIR.mkdir(exist_ok=True)
+    
+    # C++ CMake
+    if not run(["cmake", ".."], cwd=BUILD_DIR, title="Configuring CMake"):
+        error("CMake configure failed")
+        
+    # C++ Build
+    if sys.platform == "win32":
+        run(["cmake", "--build", ".", "--config", "Release", "-j", str(get_cpu_count())], cwd=BUILD_DIR, title="Compiling C++")
+    else:
+        run(["make", f"-j{get_cpu_count()}"], cwd=BUILD_DIR, title="Compiling C++")
+        
+    # Node Bindings
+    if NODE_DIR.exists() and (NODE_DIR / "package.json").exists():
+        log("Building Node.js Bindings...")
+        npm = "npm.cmd" if sys.platform == "win32" else "npm"
+        run([npm, "install"], cwd=NODE_DIR, check=False, title="Installing Node Dependencies")
+        run([npm, "run", "build"], cwd=NODE_DIR, check=False, title="Building Node Addon")
+    else:
+        warn("Node bindings skipped (not found)")
+
+    # Python Bindings
+    log("Building Python Environment...")
+    uv_run(["pip", "install", "-e", "."], cwd=PYTHON_BINDING_DIR)
+    
+    log("Build Complete!")
+
+def task_test(args):
+    """Run tests."""
+    target = args.target
+    
+    # Unit Tests
+    if target == "unit" or target == "all":
+        log("=== Unit Tests ===")
+        
+        # 1. C++
+        ctest = shutil.which("ctest")
+        if ctest:
+            run([ctest, "--output-on-failure"], cwd=BUILD_DIR, title="C++ Core Tests")
+        else:
+            warn("ctest not found")
+        
+        # 2. Python
+        log("Python Tests...")
+        uv_run(["python", "-m", "pytest"], cwd=PYTHON_BINDING_DIR)
+        
+        # 3. Node.js
+        if NODE_DIR.exists():
+            log("Node.js Tests...")
+            npm = "npm.cmd" if sys.platform == "win32" else "npm"
+            run([npm, "test"], cwd=NODE_DIR, check=False, title="Node.js Tests")
+
+    # Reliability/System Tests
+    if target == "verify" or target == "all":
+        print()
+        log("=== System Verification ===")
+        print("Running Reliability Verification Suite (ISO Claim)...")
+        script = SCRIPTS_DIR / "verify_reliability.py"
+        # Using uv with matplotlib for plotting
+        uv_cmd = ["--with", "matplotlib", "python", str(script)]
+        uv_run(uv_cmd, cwd=PROJECT_ROOT)
+        
+    if target == "chaos":
+        log("Launching Interactive Chaos Visualizer...")
+        script = SCRIPTS_DIR / "chaos_visual.py"
+        # Pass through any extra args to the visualizer
+        extra_args = args.extra_args if hasattr(args, 'extra_args') else []
+        cmd = ["--with", "rich", "python", str(script)] + extra_args
+        uv_run(cmd, cwd=PROJECT_ROOT)
+
+def task_viz(args):
+    """Generate reports/charts."""
+    log("Running Visualization...")
+    script = SCRIPTS_DIR / "visualize_results.py"
+    report_file = PROJECT_ROOT / "docs" / "test_report.md"
+    
+    if not report_file.exists():
+        warn("No test_report.md found. Run 'bridge.py test verify' first.")
+    
+    # We pass the log file path if needed, but the script defaults to test_report.md logic
+    # Actually the script takes the report file as arg 1
+    cmd = ["--with", "matplotlib", "python", str(script), str(report_file)]
+    uv_run(cmd, cwd=PROJECT_ROOT)
+
+def task_clean(args):
+    """Clean artifacts."""
+    log("Cleaning Project...")
+    
+    dirs = [
+        BUILD_DIR,
+        NODE_DIR / "build",
+        NODE_DIR / "node_modules",
+        PROJECT_ROOT / ".pytest_cache",
+        PROJECT_ROOT / "__pycache__"
+    ]
+    
+    files = [
+        PROJECT_ROOT / "test_report.md",
+        PROJECT_ROOT / "combined.log",
+        PROJECT_ROOT / "chaos_monkey.log",
+        PROJECT_ROOT / "test_timeline.png",
+        PROJECT_ROOT / "reliability_plot.png",
+        PROJECT_ROOT / "docs" / "test_report.md",
+        PROJECT_ROOT / "docs" / "test_timeline.png",
+        PROJECT_ROOT / "docs" / "reliability_plot.png"
+    ]
+    
+    for d in dirs:
+        if d.exists():
+            shutil.rmtree(d, ignore_errors=True)
+            info(f"Removed {d}")
+
+    for f in files:
+        if f.exists():
+            f.unlink()
+            info(f"Removed {f}")
+            
+    log("Clean Complete.")
+
+# --- Main CLI ---
+
+def main():
+    parser = argparse.ArgumentParser(description="DataBridge Universal Tool (bridge.py)")
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+
+    # Build
+    parser_build = subparsers.add_parser("build", help="Build all components (C++, Node, Python env)")
+    
+    # Test
+    parser_test = subparsers.add_parser("test", help="Run tests")
+    parser_test.add_argument("target", choices=["unit", "verify", "chaos", "all"], default="all", nargs="?",
+                             help="Test target: unit (C++), verify (Automated Suite), chaos (Interactive UI)")
+    parser_test.add_argument("extra_args", nargs=argparse.REMAINDER, help="Arguments passed to underlying tool (e.g. for chaos)")
+
+    # Viz
+    parser_viz = subparsers.add_parser("viz", help="Generate result visualizations")
+    
+    # Clean
+    parser_clean = subparsers.add_parser("clean", help="Clean build artifacts")
+
+    args = parser.parse_args()
+
+    if args.command == "build":
+        task_build(args)
+    elif args.command == "test":
+        task_test(args)
+    elif args.command == "viz":
+        task_viz(args)
+    elif args.command == "clean":
+        task_clean(args)
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

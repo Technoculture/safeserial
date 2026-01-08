@@ -17,6 +17,7 @@ import time
 import json
 import sys
 import threading
+import argparse
 from typing import Union
 from collections import deque
 
@@ -30,106 +31,14 @@ except ImportError:
     print("ERROR: 'rich' is required. Run: uv add rich --project bindings/python")
     sys.exit(1)
 
+from chaos_monkey import ChaosMonkey
+
 # Config
 CHAOS_CONFIG = {
     'drop_rate': 0.10,     # 10% drop rate - should still recover!
     'corrupt_rate': 0.05,  # 5% corruption - CRC will catch it
     'baud_rate': 115200,   # Emulate standard UART speed
 }
-
-class ChaosBridge:
-    """PTY Bridge with fault injection."""
-    
-    def __init__(self):
-        self.master_a, self.slave_a = pty.openpty()
-        self.master_b, self.slave_b = pty.openpty()
-        self.port_a = os.ttyname(self.slave_a)
-        self.port_b = os.ttyname(self.slave_b)
-        
-        self.running = False
-        self.stats = {'ok': 0, 'drop': 0, 'corrupt': 0, 'bytes': 0, 'retries': 0}
-        self.timeline = deque(maxlen=60)
-        self.seen_packets = set()
-        self.lock = threading.Lock()
-        
-    def start(self):
-        self.running = True
-        threading.Thread(target=self._run, daemon=True).start()
-        
-    def stop(self):
-        self.running = False
-        
-    def _run(self):
-        while self.running:
-            try:
-                r, _, _ = select.select([self.master_a, self.master_b], [], [], 0.01)
-                for fd in r:
-                    data = os.read(fd, 4096)
-                    if not data:
-                        continue
-                    # print(f"DEBUG: Read {len(data)} bytes")
-                    target = self.master_b if fd == self.master_a else self.master_a
-                    result = self._inject(data)
-                    if result:
-                        os.write(target, result)
-            except:
-                pass
-    
-    def _inject(self, data: bytes) -> bytes:
-        with self.lock:
-            # Detect retry (duplicate packet)
-            is_retry = data in self.seen_packets
-            self.seen_packets.add(data)
-
-            if random.random() < CHAOS_CONFIG['drop_rate']:
-                self.stats['drop'] += 1
-                self.timeline.append('D')
-                return b''  # Drop!
-            
-            if random.random() < CHAOS_CONFIG['corrupt_rate']:
-                self.stats['corrupt'] += 1
-                self.timeline.append('C')
-                ba = bytearray(data)
-                ba[random.randint(0, len(ba)-1)] ^= 0xFF
-                return bytes(ba)  # Corrupted!
-            
-            # Simulate Wire Speed (Baud Rate)
-            # 115200 baud ~= 11520 bytes/s (1 start + 8 data + 1 stop = 10 bits/byte)
-            # Use a slightly conservative divisor to account for overhead/inter-byte gaps
-            bytes_per_sec = CHAOS_CONFIG['baud_rate'] / 10.0
-            wire_duration = len(data) / bytes_per_sec
-            
-            # Sleep to simulate transmission time
-            # Only sleep if significant to avoid scheduler trash on single bytes
-            if wire_duration > 0.001:
-                time.sleep(wire_duration)
-            
-            if is_retry:
-                self.stats['retries'] += 1
-                self.timeline.append('R')
-            else:
-                self.stats['ok'] += 1
-                self.timeline.append('O')
-                
-            self.stats['bytes'] += len(data)
-            return data
-    
-    def get_timeline_text(self) -> Text:
-        with self.lock:
-            events = list(self.timeline)
-        text = Text()
-        for e in events:
-            if e == 'O':
-                text.append("█", style="green")
-            elif e == 'D':
-                text.append("█", style="red")
-            elif e == 'C':
-                text.append("█", style="yellow")
-            elif e == 'R':
-                text.append("█", style="blue")
-        return text
-
-import argparse
 
 def generate_payload(target_len: int) -> Union[dict, bytes]:
     # Use simple bytes for small payloads
@@ -181,7 +90,21 @@ def build_display(bridge, status_msg, elapsed, payload_sent, payload_received_cu
     text = Text()
     for line in lines:
         text.append_text(Text.from_markup(line + "\n"))
-    text.append_text(bridge.get_timeline_text())
+    
+    # Format timeline from ChaosMonkey (returns list of chars)
+    timeline_chars = bridge.get_timeline_text()
+    timeline_text = Text()
+    for e in timeline_chars:
+        if e == 'O':
+            timeline_text.append("█", style="green")
+        elif e == 'D':
+            timeline_text.append("█", style="red")
+        elif e == 'C':
+            timeline_text.append("█", style="yellow")
+        elif e == 'R':
+            timeline_text.append("█", style="blue")
+            
+    text.append_text(timeline_text)
     
     # Add a mini progress bar for payload
     pct = min(100, int(payload_received_curr / payload_sent * 100)) if payload_sent > 0 else 0
@@ -223,7 +146,14 @@ def main():
         console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes (Raw Data)")
     
     # Start bridge
-    bridge = ChaosBridge()
+    # Map CLI args to ChaosMonkey args
+    # Note: ChaosMonkey has more modes than exposed in this CLI, but we set the basic ones.
+    # We could expose more, but let's keep it simple for now, relying on defaults for burst/etc.
+    bridge = ChaosMonkey(
+        drop_rate=args.drop,
+        corrupt_rate=args.corrupt,
+        baud_rate=args.baud
+    )
     bridge.start()
     console.print(f"[cyan]Bridge:[/] {bridge.port_a} <-> {bridge.port_b}")
     

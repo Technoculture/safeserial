@@ -15,7 +15,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD_DIR = os.path.join(PROJECT_ROOT, "build")
 TEST_BIN = os.path.join(BUILD_DIR, "tests", "reliability_test")
 CHAOS_MONKEY = os.path.join(PROJECT_ROOT, "scripts", "chaos_monkey.py")
-REPORT_FILE = os.path.join(PROJECT_ROOT, "test_report.md")
+REPORT_FILE = os.path.join(PROJECT_ROOT, "docs", "test_report.md")
 CHAOS_LOG = os.path.join(PROJECT_ROOT, "chaos_monkey.log")
 COMBINED_LOG = os.path.join(PROJECT_ROOT, "combined.log")
 
@@ -136,7 +136,7 @@ Verification of the reliable serial protocol implementation (Class C Medical Dev
 *   **Test Driver:** `{os.path.abspath(__file__)}`
 
 ## 3. Reliability Visualization
-![Reliability Plot](reliability_plot.png)
+![Reliability Plot](test_timeline.png)
 
 ## 4. Test Cases & Results
 
@@ -212,14 +212,14 @@ def main():
         with open(COMBINED_LOG, "w") as f:
             f.write("\n".join(sorted_lines))
             
+        generate_iso_report(results)
+
         # Generate Plot
         try:
-            print(f"[RUNNER] Generating visual report from {COMBINED_LOG}...")
-            subprocess.run([sys.executable, "scripts/visualize_results.py", COMBINED_LOG], check=False)
+            print(f"[RUNNER] Generating visual report from {REPORT_FILE}...")
+            subprocess.run([sys.executable, "scripts/visualize_results.py", REPORT_FILE], check=False)
         except Exception as e:
             print(f"[RUNNER] Plot generation failed: {e}")
-
-        generate_iso_report(results)
         
     except KeyboardInterrupt:
         print("\n[RUNNER] Interrupted.")

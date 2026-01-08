@@ -195,6 +195,9 @@ if __name__ == "__main__":
     
     try:
         import matplotlib
-        generate_fault_tolerance_chart(results)
+        # Save output in the same directory as the report
+        report_dir = Path(report_path).parent
+        output_file = report_dir / "test_timeline.png"
+        generate_fault_tolerance_chart(results, str(output_file))
     except ImportError:
         print("matplotlib not available, skipping plots")

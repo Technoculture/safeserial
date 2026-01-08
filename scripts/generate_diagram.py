@@ -113,4 +113,7 @@ def create_multi_example_plot(output="reliability_plot.png"):
     print(f"Created: {output}")
 
 if __name__ == "__main__":
-    create_multi_example_plot("reliability_plot.png")
+    from pathlib import Path
+    docs_dir = Path(__file__).parent.parent / "docs"
+    docs_dir.mkdir(exist_ok=True)
+    create_multi_example_plot(str(docs_dir / "reliability_plot.png"))

@@ -102,6 +102,28 @@ export class DataBridge extends EventEmitter {
    * @param callback - Optional data callback
    * @returns Promise resolving to true if opened successfully
    */
+  /**
+   * Open a serial port with guaranteed reliable communication (Static Factory).
+   * 
+   * @param port - Serial port path (e.g., '/dev/ttyUSB0' or 'COM3')
+   * @param baud - Baud rate (default: 115200)
+   * @param callback - Optional data callback
+   * @returns Promise resolving to a connected DataBridge instance
+   */
+  static async open (port: string, baud: number = 115200, callback?: (data: Buffer) => void): Promise<DataBridge> {
+    const bridge = new DataBridge();
+    await bridge.open(port, baud, callback);
+    return bridge;
+  }
+
+  /**
+   * Open a serial port (Instance Method).
+   * 
+   * @param port - Serial port path
+   * @param baud - Baud rate (default: 115200)
+   * @param callback - Optional data callback
+   * @returns Promise resolving to true if opened successfully
+   */
   async open (port: string, baud: number = 115200, callback?: (data: Buffer) => void): Promise<boolean> {
     if (this._isOpen) return true;
 
@@ -117,15 +139,6 @@ export class DataBridge extends EventEmitter {
       return true;
     } catch (err)
     {
-      // Don't throw, return false to match Python behavior? 
-      // Python implementation: returns bool, but internal Open might fail.
-      // Wait, Python implementation: if self._serial.open returns false.
-      // But wrapping try/catch here allows us to return false on error if desired, 
-      // OR we can keep throwing. 
-      // The examples use await bridge.open(...) and check result or catch error.
-      // My Node examples expect instance.open to be available. 
-      // Let's align with the wrapper logic. Use a more "idiomatic" approach?
-      // Re-throwing is better for async.
       throw new Error(`Failed to open ${port}: ${err instanceof Error ? err.message : err}`);
     }
   }

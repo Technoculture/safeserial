@@ -40,6 +40,23 @@ class MockSerial:
     def write(self, data):
         with self._lock:
             self._write_log.append(bytes(data))
+            
+            # Auto-ACK logic for testing
+            try:
+                # 1. Deserialize the packet we just "sent"
+                frame, _ = _core.Packet.deserialize(data)
+                if frame.valid and frame.header.type == _core.Packet.TYPE_DATA:
+                    # 2. Construct ACK
+                    ack_pkt = _core.Packet.serialize(
+                        _core.Packet.TYPE_ACK,
+                        frame.header.seq_id,
+                        b""
+                    )
+                    # 3. Queue ACK to be "read" back by the bridge
+                    self._buffer.extend(ack_pkt)
+            except Exception:
+                pass # Ignore invalid packets
+                
         return len(data)
         
     def read(self, size):

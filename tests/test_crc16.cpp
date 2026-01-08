@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <cstring>
-#include "protocol/crc16.hpp"
+#include <data_bridge/protocol/crc16.hpp>
 
 TEST(CRC16, ValidJSONPasses) {
     const char* json =
