@@ -294,7 +294,10 @@ def main():
         pass
     finally:
         bridge.stop()
-        console.print(f"\n[bold]Final Status: {ui_state['status']}[/]")
+        final_status = ui_state['status']
+        console.print(f"\n[bold]Final Status: {final_status}[/]")
+        return final_status == "SUCCESS" or final_status == "Internal Send Complete"
 
 if __name__ == "__main__":
-    main()
+    success = main()
+    sys.exit(0 if success else 1)
