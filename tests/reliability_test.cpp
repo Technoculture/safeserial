@@ -202,7 +202,7 @@ void run_receiver(ISerialPort& serial) {
 
             if (frame.header.type == Packet::TYPE_SYN) {
                 serial.write(Packet::serialize(Packet::TYPE_ACK, 0, "OK"));
-                log_timed("[RECEIVER] Synqed.");
+                log_timed("[RECEIVER] Synced.");
             }
             else if (frame.header.type == Packet::TYPE_DATA) {
                 if (reassembler.process_fragment(frame)) {
