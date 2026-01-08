@@ -3,7 +3,7 @@ const { DataBridge } = require('../dist/index.js');
 const portPath = process.argv[2] || '/dev/ttyUSB0';
 const bridge = new DataBridge();
 
-console.log(`Openning port: ${portPath}`);
+console.log(`Opening port: ${portPath}`);
 
 async function main() {
   try {
