@@ -2,11 +2,12 @@
 """
 Chaos Visualization - Tests DataBridge ARQ Reliability
 
-This demonstrates the DataBridge protocol's ability to recover from
-chaos (drops, corruption) through its ARQ (Automatic Repeat reQuest) mechanism.
-
 Usage:
     uv run --project bindings/python python scripts/chaos_visual.py
+    
+    # Cross-language examples:
+    python scripts/chaos_visual.py --sender node --receiver python
+    python scripts/chaos_visual.py --sender cpp --receiver cpp --items 50
 """
 
 import os
@@ -18,6 +19,10 @@ import json
 import sys
 import threading
 import argparse
+import subprocess
+import shutil
+import re
+import signal
 from typing import Union
 from collections import deque
 
@@ -26,6 +31,7 @@ try:
     from rich.live import Live
     from rich.text import Text
     from rich.panel import Panel
+    from rich.progress import Progress, BarColumn, TextColumn
     console = Console()
 except ImportError:
     print("ERROR: 'rich' is required. Run: uv add rich --project bindings/python")
@@ -33,57 +39,50 @@ except ImportError:
 
 from chaos_monkey import ChaosMonkey
 
-# Config
-CHAOS_CONFIG = {
-    'drop_rate': 0.10,     # 10% drop rate - should still recover!
-    'corrupt_rate': 0.05,  # 5% corruption - CRC will catch it
-    'baud_rate': 115200,   # Emulate standard UART speed
-}
+# --- Paths (Mirrors verify_reliability.py) ---
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BUILD_DIR = os.path.join(PROJECT_ROOT, "build")
+TEST_BIN = os.path.join(BUILD_DIR, "tests", "reliability_test")
 
-def generate_payload(target_len: int) -> Union[dict, bytes]:
-    # Use simple bytes for small payloads
-    if target_len < 100:
-        return b'x' * target_len
-        
-    # Generate a complex JSON structure approx target_len bytes
-    items = []
-    # Dynamic item count roughly based on length (200 bytes per item approx)
-    count = max(5, int(target_len / 200))
-    
-    for i in range(count):
-        items.append({
-            "index": i,
-            "uuid": f"item-{random.randint(10000,99999)}",
-            "values": [random.randint(0, 100) for _ in range(5)],
-            "active": random.choice([True, False]),
-            "metadata": {
-                "created_at": time.time(),
-                "source": f"sensor-{random.randint(1,5)}"
-            }
-        })
-    
-    base_dict = {
-        "test_id": f"TEST-{random.randint(1000,9999)}",
-        "description": "Complex JSON payload for ARQ verification",
-        "timestamp": time.time(),
-        "items": items,
-        "padding": "" 
-    }
-    
-    # Calculate current size and add padding to reach target
-    curr_len = len(json.dumps(base_dict))
-    if curr_len < target_len:
-        base_dict["padding"] = "x" * (target_len - curr_len)
-        
-    return base_dict
+NODE_BINDING_ROOT = os.path.join(PROJECT_ROOT, "bindings", "node")
+NODE_SENDER = os.path.join(NODE_BINDING_ROOT, "scripts", "sender.js")
+NODE_RECEIVER = os.path.join(NODE_BINDING_ROOT, "scripts", "receiver.js")
 
-def build_display(bridge, status_msg, elapsed, payload_sent, payload_received_curr):
+PYTHON_BINDING_ROOT = os.path.join(PROJECT_ROOT, "bindings", "python")
+PYTHON_SENDER = os.path.join(PYTHON_BINDING_ROOT, "scripts", "sender.py")
+PYTHON_RECEIVER = os.path.join(PYTHON_BINDING_ROOT, "scripts", "receiver.py")
+
+# --- Helper Functions ---
+
+def get_agent_command(lang, role, port, item_count=20):
+    if lang == "cpp":
+        args = [TEST_BIN, port, role]
+        if role == "sender": args.append(str(item_count))
+        return args, PROJECT_ROOT
+    elif lang == "node":
+        script = NODE_SENDER if role == "sender" else NODE_RECEIVER
+        args = ["node", script, port]
+        if role == "sender": args.append(str(item_count))
+        return args, PROJECT_ROOT
+    elif lang == "python":
+        script = PYTHON_SENDER if role == "sender" else PYTHON_RECEIVER
+        uv = shutil.which("uv")
+        args = [uv, "run", "--project", PYTHON_BINDING_ROOT, "python", script, port]
+        if role == "sender": args.append(str(item_count))
+        return args, PROJECT_ROOT
+    elif lang == "internal":
+        return None, None
+    raise ValueError(f"Unknown language: {lang}")
+
+def build_display(bridge, status_msg, elapsed, total_items, current_items, last_log):
     stats = bridge.stats
     lines = []
     lines.append(f"[cyan]Time:[/] {elapsed:.1f}s")
     lines.append(f"[cyan]Status:[/] {status_msg}")
+    lines.append(f"[dim]{last_log}[/]")
     lines.append("")
     lines.append(f"[green]OK:[/] {stats['ok']}  [blue]RETRY:[/] {stats['retries']}  [red]DROP:[/] {stats['drop']}  [yellow]CORRUPT:[/] {stats['corrupt']}")
+    lines.append(f"[dim]Detailed: PktDrop={stats['dropped_packets']} BitFlip={stats['corrupted_bits']} Burst={stats['burst_corruptions']} Ins={stats['inserted_bytes']} Del={stats['deleted_bytes']} Latency={stats['latency_spikes']} Disc={stats['disconnects']}[/]")
     lines.append("")
     lines.append("[bold]Timeline:[/] [green]█=OK[/] [blue]█=RETRY[/] [red]█=DROP[/] [yellow]█=CORRUPT[/]")
     
@@ -91,193 +90,211 @@ def build_display(bridge, status_msg, elapsed, payload_sent, payload_received_cu
     for line in lines:
         text.append_text(Text.from_markup(line + "\n"))
     
-    # Format timeline from ChaosMonkey (returns list of chars)
+    # Timeline
     timeline_chars = bridge.get_timeline_text()
     timeline_text = Text()
     for e in timeline_chars:
-        if e == 'O':
-            timeline_text.append("█", style="green")
-        elif e == 'D':
-            timeline_text.append("█", style="red")
-        elif e == 'C':
-            timeline_text.append("█", style="yellow")
-        elif e == 'R':
-            timeline_text.append("█", style="blue")
-            
+        if e == 'O': timeline_text.append("█", style="green")
+        elif e == 'D': timeline_text.append("█", style="red")
+        elif e == 'C': timeline_text.append("█", style="yellow")
+        elif e == 'R': timeline_text.append("█", style="blue")
     text.append_text(timeline_text)
     
-    # Add a mini progress bar for payload
-    pct = min(100, int(payload_received_curr / payload_sent * 100)) if payload_sent > 0 else 0
-    text.append_text(Text.from_markup(f"\n\n[bold]Progress:[/] {pct}% ({payload_received_curr}/{payload_sent} bytes)"))
+    # Progress Bar
+    pct = 0
+    if total_items > 0:
+        pct = min(100, int(current_items / total_items * 100))
+        
+    bar_width = 40
+    filled = int(bar_width * pct / 100)
+    bar = "█" * filled + "░" * (bar_width - filled)
+    
+    text.append_text(Text.from_markup(f"\n\n[bold]Progress:[/] {pct}% [{bar}] ({current_items}/{total_items} items)"))
     
     return Panel(text, title="[bold blue]DataBridge ARQ Chaos Test[/]", border_style="blue")
 
 def main():
     parser = argparse.ArgumentParser(description="DataBridge ARQ Chaos Test")
-    parser.add_argument("--len", type=int, default=4096, help="Approximate payload length in bytes")
-    parser.add_argument("--drop", type=float, default=0.1, help="Packet drop rate (0.0-1.0)")
-    parser.add_argument("--corrupt", type=float, default=0.05, help="Packet corruption rate (0.0-1.0)")
+    parser.add_argument("--sender", choices=["internal", "cpp", "node", "python"], default="internal", help="Sender type")
+    parser.add_argument("--receiver", choices=["internal", "cpp", "node", "python"], default="internal", help="Receiver type")
+    parser.add_argument("--items", type=int, default=50, help="Number of items to send")
+    parser.add_argument("--drop", type=float, default=0.1, help="Packet drop rate")
+    parser.add_argument("--corrupt", type=float, default=0.05, help="Packet corruption rate")
     parser.add_argument("--baud", type=int, default=115200, help="Simulated baud rate")
+    
+    # Advanced Chaos Options
+    parser.add_argument("--burst", type=float, default=0.01, help="Burst corruption rate")
+    parser.add_argument("--insert", type=float, default=0.005, help="Byte insertion rate")
+    parser.add_argument("--delete", type=float, default=0.005, help="Byte deletion rate")
+    parser.add_argument("--latency", type=float, default=0.01, help="Latency spike rate")
+    parser.add_argument("--disconnect", type=float, default=0.001, help="Disconnect rate")
+    
+    # Ignored legacy args for compatibility if any wrapper passes them
+    parser.add_argument("--len", type=int, default=4096, help="Ignored in external mode")
+
     args = parser.parse_args()
 
-    # Update global config
-    CHAOS_CONFIG['drop_rate'] = args.drop
-    CHAOS_CONFIG['corrupt_rate'] = args.corrupt
-    CHAOS_CONFIG['baud_rate'] = args.baud
+    # In internal mode, we force symmetry if one is internal
+    if args.sender == "internal" and args.receiver != "internal":
+        args.receiver = "internal" # Mixed internal/external not supported easily yet
+    if args.receiver == "internal" and args.sender != "internal":
+        args.sender = "internal"
 
-    console.print(Panel.fit("[bold blue]DataBridge ARQ Chaos Test[/]"))
-    console.print(f"[yellow]Settings: {args.drop*100:.0f}% Drop, {args.corrupt*100:.0f}% Corrupt, {args.baud} Baud[/]\n")
-    
-    # Import DataBridge
-    try:
-        import data_bridge
-        console.print("[green]✓ DataBridge imported successfully[/]")
-    except ImportError as e:
-        console.print(f"[red]✗ Failed to import data_bridge: {e}[/]")
-        return
-    
-    # Create payload
-    raw_payload = generate_payload(args.len)
-    if isinstance(raw_payload, dict):
-        payload_bytes = json.dumps(raw_payload, indent=2).encode()
-        console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes (Complex JSON)")
-    else:
-        payload_bytes = raw_payload
-        console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes (Raw Data)")
-    
-    # Start bridge
-    # Map CLI args to ChaosMonkey args
-    # Note: ChaosMonkey has more modes than exposed in this CLI, but we set the basic ones.
-    # We could expose more, but let's keep it simple for now, relying on defaults for burst/etc.
+    console.print(Panel.fit("[bold blue]Cross-Language Chaos Visualizer[/]"))
+    console.print(f"[yellow]Config: {args.sender.upper()} -> {args.receiver.upper()} | {args.drop*100:.0f}% Drop, {args.corrupt*100:.0f}% Corrupt[/]")
+    console.print(f"[yellow]Advanced: Burst={args.burst*100:.1f}%, Ins/Del={args.insert*100:.1f}%, Latency={args.latency*100:.1f}%, Disc={args.disconnect*100:.1f}%[/]\n")
+
+    # Start Bridge
     bridge = ChaosMonkey(
-        drop_rate=args.drop,
-        corrupt_rate=args.corrupt,
-        baud_rate=args.baud
+        drop_rate=args.drop, 
+        corrupt_rate=args.corrupt, 
+        baud_rate=args.baud,
+        burst_corrupt_rate=args.burst,
+        insert_rate=args.insert,
+        delete_rate=args.delete,
+        latency_spike_rate=args.latency,
+        disconnect_rate=args.disconnect
     )
     bridge.start()
-    console.print(f"[cyan]Bridge:[/] {bridge.port_a} <-> {bridge.port_b}")
+    console.print(f"[cyan]Bridge Active:[/] {bridge.port_a} <-> {bridge.port_b}")
+
+    sender_proc = None
+    recv_proc = None
     
-    # Create DataBridge instances
-    sender = data_bridge.DataBridge()
-    receiver = data_bridge.DataBridge()
-    
-    received_data = []
-    receive_complete = threading.Event()
-    
-    def on_receive(data):
-        received_data.append(data)
-        receive_complete.set()
-    
-    # Open ports
-    console.print("[cyan]Opening DataBridge connections...[/]")
-    
-    if not sender.open(bridge.port_a, 115200):
-        console.print("[red]Failed to open sender[/]")
-        return
-        
-    if not receiver.open(bridge.port_b, 115200, on_receive):
-        console.print("[red]Failed to open receiver[/]")
-        return
-    
-    console.print("[green]✓ Connections established[/]")
-    console.print("\n[yellow]Starting reliable transfer with chaos injection...[/]\n")
-    
-    start_time = time.time()
-    status_msg = "Sending..."
-    send_error = None
-    
-    # Send in background so we can update display
-    def do_send():
-        nonlocal status_msg, send_error
-        try:
-            # Optimization: 250ms timeout (aggressive), 200 byte fragments (efficiency)
-            sender.send(payload_bytes, timeout_ms=250, max_retries=20, fragment_size=200)
-            status_msg = "Send complete, waiting for receiver..."
-        except Exception as e:
-            send_error = str(e)
-            status_msg = f"Send failed: {e}"
-    
-    send_thread = threading.Thread(target=do_send)
-    send_thread.start()
-    
-    # Live display
-    with Live(console=console, refresh_per_second=10) as live:
-        while send_thread.is_alive() or not receive_complete.is_set():
-            elapsed = time.time() - start_time
+    # State for UI
+    ui_state = {
+        "status": "Initializing...",
+        "items_sent": 0,
+        "items_recv": 0,
+        "last_log": "",
+        "complete": False
+    }
+
+    def monitor_stream(stream, prefix):
+        """Reads stdout from agents and updates stats."""
+        for line in iter(stream.readline, ''):
+            line = line.strip()
+            if not line: continue
             
-            # Get real-time progress
-            curr_bytes = 0
-            if hasattr(receiver, 'get_received_bytes'):
-                curr_bytes = receiver.get_received_bytes()
+            ui_state["last_log"] = f"{prefix}: {line[-50:]}" # tail log
             
-            live.update(build_display(bridge, status_msg, elapsed, len(payload_bytes), curr_bytes))
+            # Simple heuristic parsing (matches standardize logs from verify_reliability agents)
+            # Node/Py: [RECEIVER] Got: Packet-X (Total: N)
+            # C++: [RECEIVER] Completed Item X (Total: N)
+            if "Total:" in line:
+                try:
+                    # Extract number after Total:
+                    match = re.search(r"Total:\s*(\d+)", line)
+                    if match:
+                        ui_state["items_recv"] = int(match.group(1))
+                except: pass
             
-            if elapsed > 60:  # Hard timeout (increased for larger payloads)
-                status_msg = "TIMEOUT"
-                break
+            if "TEST COMPLETE" in line:
+                ui_state["status"] = "Sender Finished"
+
+    try:
+        if args.sender == "internal":
+            # --- INTERNAL MODE (Python Only, High Fidelity) ---
+            import data_bridge
             
-            time.sleep(0.1)
-    
-    send_thread.join(timeout=1)
-    elapsed = time.time() - start_time
-    
-    # Results
-    if send_error:
-        console.print(f"\n[bold red]✗ SEND FAILED: {send_error}[/]")
-    elif received_data:
-        stats = bridge.stats
-        received_bytes = received_data[0]
-        
-        # Try diffing
-        import difflib
-        
-        try:
-             # Try JSON verify first
-             recv_payload = json.loads(received_bytes.decode())
-             if isinstance(raw_payload, dict) and recv_payload == raw_payload:
-                console.print(f"\n[bold green]✓ SUCCESS! JSON payload verified perfectly![/]")
-                console.print(f"[green]Transferred {len(payload_bytes)} bytes in {elapsed:.2f}s[/]")
-                console.print(f"[green]Recovered from {stats['drop']} drops and {stats['corrupt']} corruptions[/]")
-             else:
-                # JSON but mismatch
-                 raise ValueError("JSON Mismatch")
-                 
-        except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
-            # Fallback to binary check
-            if received_bytes == payload_bytes:
-                 console.print(f"\n[bold green]✓ SUCCESS! Binary payload verified perfectly![/]")
-                 console.print(f"[green]Transferred {len(payload_bytes)} bytes in {elapsed:.2f}s[/]")
-                 console.print(f"[green]Recovered from {stats['drop']} drops and {stats['corrupt']} corruptions[/]")
-            else:
-                console.print(f"\n[bold red]✗ DATA MISMATCH[/]")
-                console.print(f"[red]Sent {len(payload_bytes)} bytes, received {len(received_bytes)} bytes[/]")
-                if isinstance(raw_payload, dict):
-                     # If we expected JSON but got here, show diff if possible
-                     try:
-                         recv_payload = json.loads(received_bytes.decode())
-                         expected_lines = json.dumps(raw_payload, indent=2).splitlines()
-                         received_lines = json.dumps(recv_payload, indent=2).splitlines()
-                         diff = difflib.unified_diff(expected_lines, received_lines, fromfile='Sent', tofile='Received', lineterm='')
-                         console.print("\n[bold]Diff:[/]")
-                         for line in diff:
-                             if line.startswith('+'): console.print(f"[green]{line}[/]")
-                             elif line.startswith('-'): console.print(f"[red]{line}[/]")
-                             elif line.startswith('^'): console.print(f"[yellow]{line}[/]")
-                             else: console.print(line)
-                     except:
-                         pass # Binary mismatch, no diff
-                else:
-                    # Raw diff limit
-                    if len(payload_bytes) < 100:
-                         console.print(f"Sent: {payload_bytes.hex()}")
-                         console.print(f"Recv: {received_bytes.hex()}")
-    else:
-        console.print(f"\n[bold red]✗ NO DATA RECEIVED[/]")
-    
-    # Cleanup
-    sender.close()
-    receiver.close()
-    bridge.stop()
+            sender = data_bridge.DataBridge()
+            receiver = data_bridge.DataBridge()
+            
+            recv_list = []
+            def on_recv(d):
+                recv_list.append(d)
+                ui_state["items_recv"] += 1
+                ui_state["last_log"] = f"RX: {len(d)} bytes"
+            
+            sender.open(bridge.port_a, 115200)
+            receiver.open(bridge.port_b, 115200, on_recv)
+            
+            # Generate dummy payload packets
+            payloads = [f"Ticket-{i}".encode() for i in range(args.items)]
+            
+            def internal_send():
+                for i, p in enumerate(payloads):
+                    ui_state["status"] = f"Sending Item {i+1}/{args.items}"
+                    try:
+                        sender.send(p)
+                        ui_state["items_sent"] += 1
+                    except Exception as e:
+                        ui_state["last_log"] = f"Send Err: {e}"
+                    time.sleep(0.05)
+                ui_state["status"] = "Internal Send Complete"
+                
+            t = threading.Thread(target=internal_send)
+            t.start()
+            
+            # Loop UI
+            start_time = time.time()
+            with Live(console=console, refresh_per_second=10) as live:
+                while ui_state["items_recv"] < args.items:
+                    elapsed = time.time() - start_time
+                    live.update(build_display(bridge, ui_state["status"], elapsed, args.items, ui_state["items_recv"], ui_state["last_log"]))
+                    
+                    if elapsed > args.items * 2: # Timeout
+                        ui_state["status"] = "TIMEOUT"
+                        break
+                    time.sleep(0.1)
+            
+            t.join()
+            sender.close()
+            receiver.close()
+
+        else:
+            # --- EXTERNAL MODE (Subprocesses) ---
+            
+            # Launch Receiver
+            rcmd, rcwd = get_agent_command(args.receiver, "receiver", bridge.port_b)
+            recv_proc = subprocess.Popen(rcmd, cwd=rcwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, preexec_fn=os.setsid)
+            t_recv = threading.Thread(target=monitor_stream, args=(recv_proc.stdout, f"[{args.receiver.upper()}]"))
+            t_recv.daemon = True
+            t_recv.start()
+            
+            # Launch Sender
+            scmd, scwd = get_agent_command(args.sender, "sender", bridge.port_a, args.items)
+            sender_proc = subprocess.Popen(scmd, cwd=scwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, preexec_fn=os.setsid)
+            t_send = threading.Thread(target=monitor_stream, args=(sender_proc.stdout, f"[{args.sender.upper()}]"))
+            t_send.daemon = True
+            t_send.start()
+            
+            ui_state["status"] = "Running external agents..."
+            
+            start_time = time.time()
+            with Live(console=console, refresh_per_second=10) as live:
+                while True:
+                    elapsed = time.time() - start_time
+                    
+                    # Update UI
+                    live.update(build_display(bridge, ui_state["status"], elapsed, args.items, ui_state["items_recv"], ui_state["last_log"]))
+                    
+                    # Exit conditions
+                    if ui_state["items_recv"] >= args.items:
+                        ui_state["status"] = "SUCCESS"
+                        break
+                        
+                    if sender_proc.poll() is not None:
+                        if sender_proc.returncode != 0:
+                            ui_state["status"] = "SENDER FAILED"
+                            break
+                        # Sender done, wait a bit for receiver
+                    
+                    if elapsed > (args.items * 1.5) + 10:
+                        ui_state["status"] = "TIMEOUT"
+                        break
+                        
+                    time.sleep(0.1)
+            
+            # Cleanup
+            if sender_proc: os.killpg(os.getpgid(sender_proc.pid), signal.SIGTERM)
+            if recv_proc: os.killpg(os.getpgid(recv_proc.pid), signal.SIGTERM)
+            
+    except KeyboardInterrupt:
+        pass
+    finally:
+        bridge.stop()
+        console.print(f"\n[bold]Final Status: {ui_state['status']}[/]")
 
 if __name__ == "__main__":
     main()

@@ -212,6 +212,42 @@ def task_clean(args):
             
     log("Clean Complete.")
 
+def task_publish(args):
+    """Publish packages to PyPI and NPM."""
+    target = args.target
+    uv = shutil.which("uv")
+    if not uv:
+        error("'uv' is required but not found in PATH.")
+    
+    # Python
+    if target == "python" or target == "all":
+        log("Publishing Python Bindings...")
+        # Clean dist
+        dist_dir = PYTHON_BINDING_DIR / "dist"
+        if dist_dir.exists(): shutil.rmtree(dist_dir)
+        
+        # Build sdist and wheel
+        # Note: 'uv build' must be run directly, not via 'uv run'
+        run([uv, "build"], cwd=PYTHON_BINDING_DIR, title="Building Python Package")
+        
+        # Publish
+        log("Uploading to PyPI...")
+        # Note: Requires UV_PUBLISH_TOKEN or interactive login
+        run([uv, "publish"], cwd=PYTHON_BINDING_DIR, title="Publishing to PyPI")
+        
+    # Node
+    if target == "node" or target == "all":
+        if NODE_DIR.exists():
+            log("Publishing Node.js Bindings...")
+            npm = "npm.cmd" if sys.platform == "win32" else "npm"
+            # Access public is usually required for scoped packages (@org/pkg)
+            # Requires npm login beforehand
+            run([npm, "publish", "--access", "public"], cwd=NODE_DIR, title="NPM Publish")
+        else:
+            warn("Node bindings not found, skipping publish")
+    
+    log("Publish Complete!")
+
 # --- Main CLI ---
 
 def main():
@@ -233,6 +269,10 @@ def main():
     # Clean
     parser_clean = subparsers.add_parser("clean", help="Clean build artifacts")
 
+    # Publish
+    parser_pub = subparsers.add_parser("publish", help="Publish packages to PyPI/NPM")
+    parser_pub.add_argument("target", choices=["python", "node", "all"], default="all", nargs="?", help="Target registry")
+
     args = parser.parse_args()
 
     if args.command == "build":
@@ -243,6 +283,8 @@ def main():
         task_viz(args)
     elif args.command == "clean":
         task_clean(args)
+    elif args.command == "publish":
+        task_publish(args)
     else:
         parser.print_help()
         sys.exit(1)

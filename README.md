@@ -63,7 +63,7 @@ We use `bridge.py`, a unified CLI tool for building, testing, and verifying the 
 ### 1. Build Everything
 Builds C++ core, Python environment, and Node bindings.
 ```bash
-python bridge.py build
+uv run python bridge.py build
 ```
 
 ## Testing & Verification
@@ -72,7 +72,7 @@ The project includes a universal CLI tool `bridge.py` to manage builds and tests
 
 ### 1. Build
 ```bash
-python bridge.py build
+uv run python bridge.py build
 ```
 Builds the C++ core, Node.js bindings (if available), and sets up the Python environment.
 
@@ -81,22 +81,35 @@ Automated suite that runs traffic simulation with dropped/corrupted packets (Cha
 
 ```bash
 # Verify C++ Bindings (Default)
-python bridge.py test verify       # Internal call to scripts/verify_reliability.py --target cpp
+uv run python bridge.py test verify       # Internal call to scripts/verify_reliability.py --target cpp
 
 # Verify Node.js Bindings
-python scripts/verify_reliability.py --target node
+uv run python scripts/verify_reliability.py --target node
+
+# Cross-Language Verification (e.g. Node Sender -> Python Receiver)
+uv run python scripts/verify_reliability.py --sender node --receiver python
 ```
 
 ### 3. Interactive Chaos Mode
 Visualize the connection state and chaos effects in real-time.
 
 ```bash
-python bridge.py test chaos
+# Default (Python only)
+uv run python bridge.py test chaos
+
+# Visualize C++ Agents
+uv run --project bindings/python python scripts/chaos_visual.py --sender cpp --receiver cpp --items 100
+
+# Visualize Mixed (Node -> Python) with High Chaos
+uv run --project bindings/python python scripts/chaos_visual.py \
+    --sender node --receiver python \
+    --drop 0.05 --corrupt 0.02 \
+    --burst 0.01 --latency 0.02 --disconnect 0.001
 ```
 
 ### 4. Unit Tests
 ```bash
-python bridge.py test unit
+uv run python bridge.py test unit
 ```
 
 ## Documentation
@@ -106,7 +119,14 @@ python bridge.py test unit
 ### 5. Generate Reports
 Regenerate plots and reports from previous test runs.
 ```bash
-python bridge.py viz
+uv run --with matplotlib python bridge.py viz
+```
+
+### 6. Publish
+Uploads artifacts to PyPI (via `uv`) and NPM.
+```bash
+uv run python bridge.py publish      # Publish both
+uv run python bridge.py publish python # Publish only Python bindings
 ```
 
 ![Fault Tolerance Test Results](docs/test_timeline.png)

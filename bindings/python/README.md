@@ -3,24 +3,30 @@
 Python bindings for the C++ Data Bridge SDK.
 
 ## Installation
-
-You can install this package using `uv`, `pip`, or build from source.
-
+Development install using `uv`:
 ```bash
-uv pip install .
+uv sync
+uv pip install -e .
 ```
 
 ## Usage
 
 ```python
-import data_bridge_sdk
+import data_bridge
 
-# Serial Port
-serial = data_bridge_sdk.SerialPort()
-serial.open("/dev/ttyUSB0", 115200)
-serial.write(b"Hello")
-data = serial.read(1024)
+# High-Level Reliable Bridge (ARQ)
+bridge = data_bridge.DataBridge()
 
-# Packet
-pkt = data_bridge_sdk.Packet.serialize(data_bridge_sdk.Packet.TYPE_DATA, 1, "Payload")
+def on_data(data):
+    print(f"Received: {data}")
+
+# Open connection (Auto-reconnect enabled by default)
+if bridge.open("/dev/ttyUSB0", 115200, on_data):
+    print("Connected!")
+    
+    # Check stats
+    print(bridge.stats)
+
+    # Send reliable message
+    bridge.send(b"Hello World")
 ```
