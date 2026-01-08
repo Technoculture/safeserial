@@ -6,11 +6,14 @@ A single entry point for all project tasks: building, testing, verifying, and vi
 
 Usage:
     python bridge.py build          # Build C++, Python, Node
-    python bridge.py test verify    # Run reliability verification suite (ISO claim)
+    python bridge.py test verify    # Run reliability verification (defaults to C++ target)
     python bridge.py test chaos     # Run interactive chaos visualizer (Live UI)
     python bridge.py test unit      # Run C++ unit tests
     python bridge.py viz            # Generate charts from test data
     python bridge.py clean          # Clean all artifacts
+
+    # Advanced Verification
+    python scripts/verify_reliability.py --target node  # Verify Node.js bindings specificially
 """
 
 import os

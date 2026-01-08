@@ -48,8 +48,19 @@ public:
          return expected_frag_ == last_frame.header.total_frags;
     }
 
+    bool is_duplicate(const Packet::Frame& frame) const {
+         if (!active_) return false;
+         uint8_t seq = frame.header.seq_id;
+         uint16_t frag = frame.header.fragment_id;
+         return (seq == current_seq_id_ && frag < expected_frag_);
+    }
+
     std::vector<uint8_t> get_data() const {
         return buffer_;
+    }
+
+    size_t get_buffered_size() const {
+        return buffer_.size();
     }
 
     uint8_t get_current_seq() const { return current_seq_id_; }

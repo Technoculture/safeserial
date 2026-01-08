@@ -1,4 +1,3 @@
-
 import subprocess
 import time
 import re
@@ -6,16 +5,27 @@ import os
 import datetime
 import signal
 import sys
+import argparse
 
 # Requirements
-# RELIABILITY TEST BINARY: build/tests/reliability_test
-# CHAOS MONKEY: tests/chaos_monkey.py
+# C++ TEST BINARY: build/tests/reliability_test
+# NODE SENDER: bindings/node/scripts/sender.js
+# NODE RECEIVER: bindings/node/scripts/receiver.js
+# CHAOS MONKEY: scripts/chaos_monkey.py
+#
+# Usage:
+#   python scripts/verify_reliability.py --target cpp   # Test C++ bindings (Default)
+#   python scripts/verify_reliability.py --target node  # Test Node.js bindings
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD_DIR = os.path.join(PROJECT_ROOT, "build")
 TEST_BIN = os.path.join(BUILD_DIR, "tests", "reliability_test")
+
+NODE_BINDING_ROOT = os.path.join(PROJECT_ROOT, "bindings", "node")
+NODE_SENDER = os.path.join(NODE_BINDING_ROOT, "scripts", "sender.js")
+NODE_RECEIVER = os.path.join(NODE_BINDING_ROOT, "scripts", "receiver.js")
+
 CHAOS_MONKEY = os.path.join(PROJECT_ROOT, "scripts", "chaos_monkey.py")
-REPORT_FILE = os.path.join(PROJECT_ROOT, "docs", "test_report.md")
 CHAOS_LOG = os.path.join(PROJECT_ROOT, "chaos_monkey.log")
 COMBINED_LOG = os.path.join(PROJECT_ROOT, "combined.log")
 
@@ -26,8 +36,8 @@ def kill_process(proc):
         except ProcessLookupError:
             pass
 
-def run_test_cycle(drop_rate, corrupt_rate, item_count):
-    print(f"--- Starting Test Cycle: Drop={drop_rate}, Corrupt={corrupt_rate}, Items={item_count} ---")
+def run_test_cycle(target, drop_rate, corrupt_rate, item_count):
+    print(f"--- Starting {target.upper()} Test Cycle: Drop={drop_rate}, Corrupt={corrupt_rate}, Items={item_count} ---")
     
     # 1. Start Chaos Monkey
     print("[RUNNER] Launching Chaos Monkey...")
@@ -65,25 +75,38 @@ def run_test_cycle(drop_rate, corrupt_rate, item_count):
         
     print(f"[RUNNER] Ports Active: {port_a} <-> {port_b}")
     
+    # Determine commands based on target
+    if target == "cpp":
+        recv_cmd = [TEST_BIN, port_b, "receiver"]
+        send_cmd = [TEST_BIN, port_a, "sender", str(item_count)]
+        cwd = PROJECT_ROOT
+    elif target == "node":
+        recv_cmd = ["node", NODE_RECEIVER, port_b]
+        send_cmd = ["node", NODE_SENDER, port_a, str(item_count)]
+        cwd = PROJECT_ROOT
+    else:
+        raise ValueError(f"Unknown target: {target}")
+
     # 2. Start Receiver (Background)
-    # Redirect stderr to stdout to capture everything in one stream
-    print(f"[RUNNER] Launching Receiver on {port_b}...")
+    print(f"[RUNNER] Launching Receiver ({target}) on {port_b}...")
     recv_proc = subprocess.Popen(
-        [TEST_BIN, port_b, "receiver"],
+        recv_cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT, 
         text=True,
-        preexec_fn=os.setsid
+        preexec_fn=os.setsid,
+        cwd=cwd
     )
     
     # 3. Start Sender (Foreground - wait for completion)
-    print(f"[RUNNER] Launching Sender on {port_a}...")
+    print(f"[RUNNER] Launching Sender ({target}) on {port_a}...")
     sender_proc = subprocess.Popen(
-        [TEST_BIN, port_a, "sender", str(item_count)],
+        send_cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        preexec_fn=os.setsid
+        preexec_fn=os.setsid,
+        cwd=cwd
     )
     
     sender_out = ""
@@ -92,11 +115,10 @@ def run_test_cycle(drop_rate, corrupt_rate, item_count):
     except subprocess.TimeoutExpired:
         print("[RUNNER] Sender timed out!")
         kill_process(sender_proc)
-        # Try to get what we have
         try:
-             sender_out, _ = sender_proc.communicate(timeout=1)
+            sender_out, _ = sender_proc.communicate(timeout=1)
         except: pass
-        sender_proc.returncode = -1 # Mark as failed
+        sender_proc.returncode = -1 
     
     # 4. Stop everything
     kill_process(recv_proc)
@@ -117,23 +139,27 @@ def run_test_cycle(drop_rate, corrupt_rate, item_count):
         return True, full_log
     else:
         print(f"[RUNNER] Cycle Failed!")
+        if target == "node" and ("Cannot find module" in sender_out or "Cannot find module" in recv_out):
+             print("[RUNNER] Hint: Check if Node.js bindings are built (npm run build in bindings/node)")
+        
         print(f"--- SENDER LOG ---\n{sender_out}\n------------------")
         print(f"--- RECEIVER LOG ---\n{recv_out}\n--------------------")
         return False, full_log
 
-def generate_iso_report(results):
-    report = f"""# Test Record - ISO 13485 Compliance
+def generate_iso_report(results, target, report_file):
+    report = f"""# Test Record - {target.upper()} Binding Reliability
 **Project:** Data Bridge Serial Protocol
 **Date:** {datetime.datetime.now().isoformat()}
 **Tester:** Automated Runner
+**Target:** {target}
 
 ## 1. Scope
 Verification of the reliable serial protocol implementation (Class C Medical Device component).
 
 ## 2. Test Environment
 *   **OS:** {sys.platform}
-*   **Build Artifacts:** `{TEST_BIN}`
 *   **Test Driver:** `{os.path.abspath(__file__)}`
+*   **Target:** {target} 
 
 ## 3. Reliability Visualization
 ![Reliability Plot](test_timeline.png)
@@ -144,7 +170,7 @@ Verification of the reliable serial protocol implementation (Class C Medical Dev
 | :--- | :--- | :--- | :--- | :--- |
 """
     
-    details = "\n## 4. Execution Logs\n"
+    details = "\n## 5. Execution Logs\n"
     
     all_passed = True
     for i, res in enumerate(results):
@@ -156,22 +182,34 @@ Verification of the reliable serial protocol implementation (Class C Medical Dev
         details += f"\n### T-{i+1:03d} Details\n{res['logs']}\n"
 
     report += f"""
-## 5. Conclusion
+## 6. Conclusion
 **Overall Status:** {"PASS" if all_passed else "FAIL"}
 
 The software {"HAS" if all_passed else "HAS NOT"} demonstrated compliance with reliability requirements.
 """
     report += details
     
-    with open(REPORT_FILE, "w") as f:
+    with open(report_file, "w") as f:
         f.write(report)
     
-    print(f"[RUNNER] Report generated at {REPORT_FILE}")
+    print(f"[RUNNER] Report generated at {report_file}")
 
 def main():
-    if not os.path.exists(TEST_BIN):
-        print(f"Error: Binary not found at {TEST_BIN}. Run cmake/make first.")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Run reliability verification tests for Data Bridge.")
+    parser.add_argument("--target", choices=["cpp", "node"], default="cpp", help="Target implementation to test (cpp or node)")
+    parser.add_argument("--report", default=os.path.join(PROJECT_ROOT, "docs", "test_report.md"), help="Path to output report file")
+    
+    args = parser.parse_args()
+    
+    # Check binary existence
+    if args.target == "cpp":
+        if not os.path.exists(TEST_BIN):
+            print(f"Error: Binary not found at {TEST_BIN}. Run cmake/make first.")
+            sys.exit(1)
+    elif args.target == "node":
+        if not os.path.exists(NODE_SENDER):
+            print(f"Error: Sender script not found at {NODE_SENDER}")
+            sys.exit(1)
 
     test_scenarios = [
         {"drop": 0.0, "corrupt": 0.0, "items": 20},   # Baseline
@@ -183,7 +221,7 @@ def main():
     
     try:
         for scenario in test_scenarios:
-            passed, logs = run_test_cycle(scenario["drop"], scenario["corrupt"], scenario["items"])
+            passed, logs = run_test_cycle(args.target, scenario["drop"], scenario["corrupt"], scenario["items"])
             results.append({
                 "drop": scenario["drop"],
                 "corrupt": scenario["corrupt"],
@@ -212,12 +250,13 @@ def main():
         with open(COMBINED_LOG, "w") as f:
             f.write("\n".join(sorted_lines))
             
-        generate_iso_report(results)
+        generate_iso_report(results, args.target, args.report)
 
-        # Generate Plot
+        # Generate Plot (only for full runs usually, but we can try)
         try:
-            print(f"[RUNNER] Generating visual report from {REPORT_FILE}...")
-            subprocess.run([sys.executable, "scripts/visualize_results.py", REPORT_FILE], check=False)
+            print(f"[RUNNER] Generating visual report from {args.report}...")
+            # Visualize script might depend on specific report format or just the report file path
+            subprocess.run([sys.executable, "scripts/visualize_results.py", args.report], check=False)
         except Exception as e:
             print(f"[RUNNER] Plot generation failed: {e}")
         

@@ -38,6 +38,7 @@ interface QueuedMessage {
 }
 
 export class ResilientDataBridge extends EventEmitter {
+  // Use DataBridge type from index (which is reliable now)
   private bridge: DataBridge | null = null;
   private port: string;
   private options: Required<ResilientOptions>;
@@ -53,6 +54,9 @@ export class ResilientDataBridge extends EventEmitter {
     this.port = port;
     this.options = {
       baudRate: options.baudRate ?? 115200,
+      maxRetries: options.maxRetries ?? 10,
+      ackTimeoutMs: options.ackTimeoutMs ?? 500,
+      fragmentSize: options.fragmentSize ?? 200,
       reconnect: options.reconnect ?? true,
       reconnectDelay: options.reconnectDelay ?? 1000,
       maxReconnectDelay: options.maxReconnectDelay ?? 30000,
@@ -75,8 +79,11 @@ export class ResilientDataBridge extends EventEmitter {
   private async connect (): Promise<void> {
     try
     {
-      this.bridge = new DataBridge();
-      await this.bridge.open(this.port, this.options.baudRate);
+      // Pass full options to reliable bridge
+      this.bridge = new DataBridge(this.options);
+
+      // Open using just the port (options passed in constructor)
+      await this.bridge.open(this.port);
 
       this.isConnected = true;
       this.reconnectAttempt = 0;
@@ -87,8 +94,23 @@ export class ResilientDataBridge extends EventEmitter {
       });
 
       // Handle errors and detect disconnection
+      // Note: ReliableDataBridge might not emit error on single failure (it retries), 
+      // but it will if retries exhausted or port error.
       this.bridge.on('error', (err) => {
         this.emit('error', err);
+        // If error is fatal (port closed/lost), handle disconnect
+        // ReliableDataBridge throws/emits error if max retries reached. 
+        // We need to assume that might mean broken link or just timeouts?
+        // Actually SerialPort wrapper might throw/emit if underlying handle dies.
+        // For simplicity, treat any error as triggers for potential reconnection logic or check isOpen
+        if (!this.bridge?.isOpen)
+        {
+          this.handleDisconnect();
+        }
+      });
+
+      // Check if closed
+      this.bridge.on('close', () => {
         this.handleDisconnect();
       });
 
@@ -116,7 +138,7 @@ export class ResilientDataBridge extends EventEmitter {
     if (!this.isConnected) return;
 
     this.isConnected = false;
-    this.bridge = null;
+    this.bridge = null; // Clean up old instance
     this.emit('disconnect');
 
     if (this.shouldReconnect && this.options.reconnect)
@@ -165,7 +187,7 @@ export class ResilientDataBridge extends EventEmitter {
   async send (data: Buffer | string): Promise<void> {
     const buffer = typeof data === 'string' ? Buffer.from(data) : data;
 
-    if (this.isConnected && this.bridge)
+    if (this.isConnected && this.bridge && this.bridge.isOpen)
     {
       // Connected - send immediately
       try
@@ -173,7 +195,9 @@ export class ResilientDataBridge extends EventEmitter {
         await this.bridge.send(buffer);
       } catch (err)
       {
-        // Send failed - queue it and handle disconnect
+        // Send failed (retries exhausted or port error)
+        // Queue it and trigger reconnect check
+        this.handleDisconnect(); // Force reconnect cycle logic
         return this.queueMessage(buffer);
       }
     } else
@@ -273,3 +297,4 @@ export class ResilientDataBridge extends EventEmitter {
 }
 
 export default ResilientDataBridge;
+

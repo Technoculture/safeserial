@@ -66,24 +66,42 @@ Builds C++ core, Python environment, and Node bindings.
 python bridge.py build
 ```
 
-### 2. Run Tests
-Runs unit tests for C++, Python, and Node, plus the system verification suite.
+## Testing & Verification
+
+The project includes a universal CLI tool `bridge.py` to manage builds and tests.
+
+### 1. Build
 ```bash
-python bridge.py test all
+python bridge.py build
+```
+Builds the C++ core, Node.js bindings (if available), and sets up the Python environment.
+
+### 2. Run Reliability Verification
+Automated suite that runs traffic simulation with dropped/corrupted packets (Chaos Monkey).
+
+```bash
+# Verify C++ Bindings (Default)
+python bridge.py test verify       # Internal call to scripts/verify_reliability.py --target cpp
+
+# Verify Node.js Bindings
+python scripts/verify_reliability.py --target node
 ```
 
-### 3. Verify Reliability (ISO Compliance)
-Runs the automated reliability claim suite against `chaos_monkey.py`.
+### 3. Interactive Chaos Mode
+Visualize the connection state and chaos effects in real-time.
+
 ```bash
-python bridge.py test verify
-# Report generated at docs/test_report.md
+python bridge.py test chaos
 ```
 
-### 4. Interactive Chaos Visualizer
-Launch the live TUI to see the ARQ protocol fight through packet loss and corruption.
+### 4. Unit Tests
 ```bash
-python bridge.py test chaos -- --drop 0.1 --corrupt 0.05
+python bridge.py test unit
 ```
+
+## Documentation
+- **Test Reports**: Generated in `docs/test_report.md` after running verification.
+- **Walkthrough**: See [walkthrough.md](walkthrough.md) for implementation details.
 
 ### 5. Generate Reports
 Regenerate plots and reports from previous test runs.
