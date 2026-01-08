@@ -48,6 +48,7 @@ class ChaosBridge:
         self.running = False
         self.stats = {'ok': 0, 'drop': 0, 'corrupt': 0, 'bytes': 0, 'retries': 0}
         self.timeline = deque(maxlen=60)
+        self.seen_packets = set()
         self.lock = threading.Lock()
         
     def start(self):
@@ -65,6 +66,7 @@ class ChaosBridge:
                     data = os.read(fd, 4096)
                     if not data:
                         continue
+                    # print(f"DEBUG: Read {len(data)} bytes")
                     target = self.master_b if fd == self.master_a else self.master_a
                     result = self._inject(data)
                     if result:
@@ -74,6 +76,10 @@ class ChaosBridge:
     
     def _inject(self, data: bytes) -> bytes:
         with self.lock:
+            # Detect retry (duplicate packet)
+            is_retry = data in self.seen_packets
+            self.seen_packets.add(data)
+
             if random.random() < CHAOS_CONFIG['drop_rate']:
                 self.stats['drop'] += 1
                 self.timeline.append('D')
@@ -86,10 +92,19 @@ class ChaosBridge:
                 ba[random.randint(0, len(ba)-1)] ^= 0xFF
                 return bytes(ba)  # Corrupted!
             
-            time.sleep(CHAOS_CONFIG['latency_ms'] / 1000)
-            self.stats['ok'] += 1
+            # Reduce latency impact on fragmented reads
+            # checking length to avoid excessive sleep on tiny reads
+            if len(data) > 10: 
+                time.sleep(CHAOS_CONFIG['latency_ms'] / 1000)
+            
+            if is_retry:
+                self.stats['retries'] += 1
+                self.timeline.append('R')
+            else:
+                self.stats['ok'] += 1
+                self.timeline.append('O')
+                
             self.stats['bytes'] += len(data)
-            self.timeline.append('O')
             return data
     
     def get_timeline_text(self) -> Text:
@@ -103,14 +118,31 @@ class ChaosBridge:
                 text.append("█", style="red")
             elif e == 'C':
                 text.append("█", style="yellow")
+            elif e == 'R':
+                text.append("█", style="blue")
         return text
 
 def generate_payload() -> dict:
+    # Generate a complex JSON structure approx 1KB to test meaningful data transfer
+    items = []
+    for i in range(15):
+        items.append({
+            "index": i,
+            "uuid": f"item-{random.randint(10000,99999)}",
+            "values": [random.randint(0, 100) for _ in range(5)],
+            "active": random.choice([True, False]),
+            "metadata": {
+                "created_at": time.time(),
+                "source": f"sensor-{random.randint(1,5)}"
+            }
+        })
+    
     return {
-        "id": f"test-{random.randint(1000,9999)}",
+        "test_id": f"TEST-{random.randint(1000,9999)}",
+        "description": "Complex JSON payload for ARQ verification",
         "timestamp": time.time(),
-        "msg": "DataBridge ARQ Test",
-        "checksum": random.randint(0, 1000000),
+        "items": items,
+        "padding": "x" * 100 # Adjust to ensure we hit ~1KB mark 
     }
 
 def build_display(bridge, status_msg, elapsed, payload_sent, payload_received):
@@ -119,20 +151,24 @@ def build_display(bridge, status_msg, elapsed, payload_sent, payload_received):
     lines.append(f"[cyan]Time:[/] {elapsed:.1f}s")
     lines.append(f"[cyan]Status:[/] {status_msg}")
     lines.append("")
-    lines.append(f"[green]OK:[/] {stats['ok']}  [red]DROP:[/] {stats['drop']}  [yellow]CORRUPT:[/] {stats['corrupt']}")
+    lines.append(f"[green]OK:[/] {stats['ok']}  [blue]RETRY:[/] {stats['retries']}  [red]DROP:[/] {stats['drop']}  [yellow]CORRUPT:[/] {stats['corrupt']}")
     lines.append("")
-    lines.append("[bold]Timeline:[/] [green]█=OK[/] [red]█=DROP[/] [yellow]█=CORRUPT[/]")
+    lines.append("[bold]Timeline:[/] [green]█=OK[/] [blue]█=RETRY[/] [red]█=DROP[/] [yellow]█=CORRUPT[/]")
     
     text = Text()
     for line in lines:
         text.append_text(Text.from_markup(line + "\n"))
     text.append_text(bridge.get_timeline_text())
     
+    # Add a mini progress bar for payload
+    pct = min(100, int(payload_received / payload_sent * 100)) if payload_sent > 0 else 0
+    text.append_text(Text.from_markup(f"\n\n[bold]Progress:[/] {pct}% ({payload_received}/{payload_sent} bytes)"))
+    
     return Panel(text, title="[bold blue]DataBridge ARQ Chaos Test[/]", border_style="blue")
 
 def main():
     console.print(Panel.fit("[bold blue]DataBridge ARQ Chaos Test[/]"))
-    console.print("[yellow]Testing that DataBridge recovers from 10% drop + 5% corruption[/]\n")
+    console.print(f"[yellow]Testing that DataBridge recovers from {CHAOS_CONFIG['drop_rate']*100:.0f}% drop + {CHAOS_CONFIG['corrupt_rate']*100:.0f}% corruption[/]\n")
     
     # Import DataBridge
     try:
@@ -144,8 +180,8 @@ def main():
     
     # Create payload
     payload = generate_payload()
-    payload_bytes = json.dumps(payload).encode()
-    console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes")
+    payload_bytes = json.dumps(payload, indent=2).encode() # Pretty print for diff readability
+    console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes (Complex JSON)")
     
     # Start bridge
     bridge = ChaosBridge()
@@ -211,32 +247,45 @@ def main():
     elapsed = time.time() - start_time
     
     # Results
-    console.print("\n" + "=" * 50)
-    console.print("[bold]RESULT[/]")
-    console.print("=" * 50)
-    
-    stats = bridge.stats
-    console.print(f"\n[cyan]Chaos Stats:[/]")
-    console.print(f"  Packets OK:       [green]{stats['ok']}[/]")
-    console.print(f"  Packets DROPPED:  [red]{stats['drop']}[/]")
-    console.print(f"  Packets CORRUPTED:[yellow]{stats['corrupt']}[/]")
-    
     if send_error:
         console.print(f"\n[bold red]✗ SEND FAILED: {send_error}[/]")
     elif received_data:
+        stats = bridge.stats
         received_bytes = received_data[0]
-        if received_bytes == payload_bytes:
-            console.print(f"\n[bold green]✓ SUCCESS! Data integrity verified despite chaos![/]")
-            console.print(f"[green]Transferred {len(payload_bytes)} bytes in {elapsed:.2f}s[/]")
-            console.print(f"[green]Recovered from {stats['drop']} drops and {stats['corrupt']} corruptions[/]")
-        else:
-            console.print(f"\n[bold red]✗ DATA MISMATCH[/]")
+        
+        # Try diffing
+        import difflib
+        
+        try:
+             recv_payload = json.loads(received_bytes.decode())
+             if recv_payload == payload:
+                console.print(f"\n[bold green]✓ SUCCESS! JSON payload verified perfectly![/]")
+                console.print(f"[green]Transferred {len(payload_bytes)} bytes in {elapsed:.2f}s[/]")
+                console.print(f"[green]Recovered from {stats['drop']} drops and {stats['corrupt']} corruptions[/]")
+             else:
+                console.print(f"\n[bold red]✗ JSON MISMATCH[/]")
+                # Compute diff
+                expected_lines = json.dumps(payload, indent=2).splitlines()
+                received_lines = json.dumps(recv_payload, indent=2).splitlines()
+                
+                diff = difflib.unified_diff(expected_lines, received_lines, fromfile='Sent', tofile='Received', lineterm='')
+                console.print("\n[bold]Diff:[/]")
+                for line in diff:
+                    if line.startswith('+'):
+                        console.print(f"[green]{line}[/]")
+                    elif line.startswith('-'):
+                        console.print(f"[red]{line}[/]")
+                    elif line.startswith('^'):
+                        console.print(f"[yellow]{line}[/]")
+                    else:
+                        console.print(line)
+        except json.JSONDecodeError:
+            console.print(f"\n[bold red]✗ FAILED TO DECODE RECEIVED JSON[/]")
             console.print(f"[red]Sent {len(payload_bytes)} bytes, received {len(received_bytes)} bytes[/]")
+            if received_bytes != payload_bytes:
+                 console.print("[red]Binary mismatch![/]")
     else:
         console.print(f"\n[bold red]✗ NO DATA RECEIVED[/]")
-    
-    console.print("\n[bold]Timeline:[/]")
-    console.print(bridge.get_timeline_text())
     
     # Cleanup
     sender.close()

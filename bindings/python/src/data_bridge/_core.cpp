@@ -83,6 +83,7 @@ PYBIND11_MODULE(_core, m) {
         .def(py::init<>())
         .def("process_fragment", &Reassembler::process_fragment)
         .def("is_complete", &Reassembler::is_complete)
+        .def("is_duplicate", &Reassembler::is_duplicate)
         .def("get_data", [](const Reassembler& r) {
             return vec_to_bytes(r.get_data());
         })
