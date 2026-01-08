@@ -3,8 +3,16 @@ project(data_bridge_node)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Root of the data-bridge project
-get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+# Check for bundled dependencies (NPM package mode)
+set(LOCAL_DEPS "${CMAKE_CURRENT_SOURCE_DIR}/deps")
+if(EXISTS "${LOCAL_DEPS}/include")
+    message(STATUS "Using bundled dependencies in ${LOCAL_DEPS}")
+    set(PROJECT_ROOT "${LOCAL_DEPS}")
+else()
+    # Development mode (Monorepo)
+    get_filename_component(PROJECT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+    message(STATUS "Using development source root: ${PROJECT_ROOT}")
+endif()
 
 # Include Node-API headers
 include_directories(${CMAKE_JS_INC})
