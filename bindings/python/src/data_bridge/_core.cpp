@@ -87,6 +87,7 @@ PYBIND11_MODULE(_core, m) {
         .def("get_data", [](const Reassembler& r) {
             return vec_to_bytes(r.get_data());
         })
+        .def("get_buffered_size", &Reassembler::get_buffered_size)
         .def("get_current_seq", &Reassembler::get_current_seq);
 
     // SerialPort Class

@@ -33,7 +33,7 @@ except ImportError:
 CHAOS_CONFIG = {
     'drop_rate': 0.10,     # 10% drop rate - should still recover!
     'corrupt_rate': 0.05,  # 5% corruption - CRC will catch it
-    'latency_ms': 10,
+    'baud_rate': 115200,   # Emulate standard UART speed
 }
 
 class ChaosBridge:
@@ -92,10 +92,16 @@ class ChaosBridge:
                 ba[random.randint(0, len(ba)-1)] ^= 0xFF
                 return bytes(ba)  # Corrupted!
             
-            # Reduce latency impact on fragmented reads
-            # checking length to avoid excessive sleep on tiny reads
-            if len(data) > 10: 
-                time.sleep(CHAOS_CONFIG['latency_ms'] / 1000)
+            # Simulate Wire Speed (Baud Rate)
+            # 115200 baud ~= 11520 bytes/s (1 start + 8 data + 1 stop = 10 bits/byte)
+            # Use a slightly conservative divisor to account for overhead/inter-byte gaps
+            bytes_per_sec = CHAOS_CONFIG['baud_rate'] / 10.0
+            wire_duration = len(data) / bytes_per_sec
+            
+            # Sleep to simulate transmission time
+            # Only sleep if significant to avoid scheduler trash on single bytes
+            if wire_duration > 0.001:
+                time.sleep(wire_duration)
             
             if is_retry:
                 self.stats['retries'] += 1
@@ -122,10 +128,15 @@ class ChaosBridge:
                 text.append("█", style="blue")
         return text
 
-def generate_payload() -> dict:
-    # Generate a complex JSON structure approx 1KB to test meaningful data transfer
+import argparse
+
+def generate_payload(target_len: int) -> dict:
+    # Generate a complex JSON structure approx target_len bytes
     items = []
-    for i in range(15):
+    # Dynamic item count roughly based on length (200 bytes per item approx)
+    count = max(5, int(target_len / 200))
+    
+    for i in range(count):
         items.append({
             "index": i,
             "uuid": f"item-{random.randint(10000,99999)}",
@@ -137,15 +148,22 @@ def generate_payload() -> dict:
             }
         })
     
-    return {
+    base_dict = {
         "test_id": f"TEST-{random.randint(1000,9999)}",
         "description": "Complex JSON payload for ARQ verification",
         "timestamp": time.time(),
         "items": items,
-        "padding": "x" * 100 # Adjust to ensure we hit ~1KB mark 
+        "padding": "" 
     }
+    
+    # Calculate current size and add padding to reach target
+    curr_len = len(json.dumps(base_dict))
+    if curr_len < target_len:
+        base_dict["padding"] = "x" * (target_len - curr_len)
+        
+    return base_dict
 
-def build_display(bridge, status_msg, elapsed, payload_sent, payload_received):
+def build_display(bridge, status_msg, elapsed, payload_sent, payload_received_curr):
     stats = bridge.stats
     lines = []
     lines.append(f"[cyan]Time:[/] {elapsed:.1f}s")
@@ -161,25 +179,40 @@ def build_display(bridge, status_msg, elapsed, payload_sent, payload_received):
     text.append_text(bridge.get_timeline_text())
     
     # Add a mini progress bar for payload
-    pct = min(100, int(payload_received / payload_sent * 100)) if payload_sent > 0 else 0
-    text.append_text(Text.from_markup(f"\n\n[bold]Progress:[/] {pct}% ({payload_received}/{payload_sent} bytes)"))
+    pct = min(100, int(payload_received_curr / payload_sent * 100)) if payload_sent > 0 else 0
+    text.append_text(Text.from_markup(f"\n\n[bold]Progress:[/] {pct}% ({payload_received_curr}/{payload_sent} bytes)"))
     
     return Panel(text, title="[bold blue]DataBridge ARQ Chaos Test[/]", border_style="blue")
 
 def main():
+    parser = argparse.ArgumentParser(description="DataBridge ARQ Chaos Test")
+    parser.add_argument("--len", type=int, default=4096, help="Approximate payload length in bytes")
+    parser.add_argument("--drop", type=float, default=0.1, help="Packet drop rate (0.0-1.0)")
+    parser.add_argument("--corrupt", type=float, default=0.05, help="Packet corruption rate (0.0-1.0)")
+    parser.add_argument("--baud", type=int, default=115200, help="Simulated baud rate")
+    args = parser.parse_args()
+
+    # Update global config
+    CHAOS_CONFIG['drop_rate'] = args.drop
+    CHAOS_CONFIG['corrupt_rate'] = args.corrupt
+    CHAOS_CONFIG['baud_rate'] = args.baud
+
     console.print(Panel.fit("[bold blue]DataBridge ARQ Chaos Test[/]"))
-    console.print(f"[yellow]Testing that DataBridge recovers from {CHAOS_CONFIG['drop_rate']*100:.0f}% drop + {CHAOS_CONFIG['corrupt_rate']*100:.0f}% corruption[/]\n")
+    console.print(f"[yellow]Settings: {args.drop*100:.0f}% Drop, {args.corrupt*100:.0f}% Corrupt, {args.baud} Baud[/]\n")
     
     # Import DataBridge
     try:
         import data_bridge
+        import data_bridge._core
         console.print("[green]✓ DataBridge imported successfully[/]")
+        console.print(f"[dim]Module: {data_bridge._core.__file__}[/]")
+        console.print(f"[dim]Reassembler attrs: {[x for x in dir(data_bridge._core.Reassembler) if not x.startswith('__')]}[/]")
     except ImportError as e:
         console.print(f"[red]✗ Failed to import data_bridge: {e}[/]")
         return
     
     # Create payload
-    payload = generate_payload()
+    payload = generate_payload(args.len)
     payload_bytes = json.dumps(payload, indent=2).encode() # Pretty print for diff readability
     console.print(f"[cyan]Payload:[/] {len(payload_bytes)} bytes (Complex JSON)")
     
@@ -221,7 +254,8 @@ def main():
     def do_send():
         nonlocal status_msg, send_error
         try:
-            sender.send(payload_bytes, timeout_ms=500, max_retries=20)
+            # Optimization: 250ms timeout (aggressive), 200 byte fragments (efficiency)
+            sender.send(payload_bytes, timeout_ms=250, max_retries=20, fragment_size=200)
             status_msg = "Send complete, waiting for receiver..."
         except Exception as e:
             send_error = str(e)
@@ -234,10 +268,16 @@ def main():
     with Live(console=console, refresh_per_second=10) as live:
         while send_thread.is_alive() or not receive_complete.is_set():
             elapsed = time.time() - start_time
-            live.update(build_display(bridge, status_msg, elapsed, len(payload_bytes), 
-                                      len(received_data[0]) if received_data else 0))
             
-            if elapsed > 30:  # Hard timeout
+            # Get real-time progress
+            # Note: We need to check if method exists (in case user runs old lib)
+            curr_bytes = 0
+            if hasattr(receiver, 'get_received_bytes'):
+                curr_bytes = receiver.get_received_bytes()
+            
+            live.update(build_display(bridge, status_msg, elapsed, len(payload_bytes), curr_bytes))
+            
+            if elapsed > 60:  # Hard timeout (increased for larger payloads)
                 status_msg = "TIMEOUT"
                 break
             

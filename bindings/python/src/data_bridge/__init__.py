@@ -37,6 +37,12 @@ class DataBridge:
         # Map seq_id -> (fragment_id, event)
         self._pending_acks: Dict[int, tuple[int, threading.Event]] = {}
         self._ack_lock = threading.Lock()
+        
+        self._reassembler = _core.Reassembler()
+
+    def get_received_bytes(self) -> int:
+        """Return the number of bytes currently buffered in the reassembler."""
+        return self._reassembler.get_buffered_size()
 
     def open(self, port: str, baud_rate: int = 115200, on_data: Optional[Callable[[bytes], None]] = None) -> bool:
         """
@@ -157,7 +163,7 @@ class DataBridge:
 
     def _receive_loop(self):
         """Background thread for reading, reassembly, and ACK handling."""
-        reassembler = _core.Reassembler()
+        # reassembler = _core.Reassembler()  <-- Using self._reassembler now
         rx_pool = bytearray()
         
         while not self._stop_event.is_set():
@@ -201,16 +207,16 @@ class DataBridge:
                     elif frame.header.type == _core.Packet.TYPE_DATA:
                         should_ack = False
                         
-                        if reassembler.process_fragment(frame):
+                        if self._reassembler.process_fragment(frame):
                              should_ack = True
-                             if reassembler.is_complete(frame):
-                                 data = reassembler.get_data()
+                             if self._reassembler.is_complete(frame):
+                                 data = self._reassembler.get_data()
                                  if self._on_data_callback:
                                      try:
                                          self._on_data_callback(data)
                                      except Exception as e:
                                          print(f"Error in data callback: {e}")
-                        elif reassembler.is_duplicate(frame):
+                        elif self._reassembler.is_duplicate(frame):
                              should_ack = True
                         
                         # Always send ACK for valid DATA packets (including duplicates)
