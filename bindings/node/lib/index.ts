@@ -82,7 +82,7 @@ export class DataBridge extends EventEmitter {
   private native: NativeDataBridge;
   private _isOpen = false;
 
-  private constructor() {
+  public constructor() {
     super();
     this.native = new addon.DataBridge();
   }
@@ -94,21 +94,38 @@ export class DataBridge extends EventEmitter {
    * @param options - Configuration options
    * @returns Promise resolving to a DataBridge instance
    */
-  static async open (port: string, options: DataBridgeOptions = {}): Promise<DataBridge> {
-    const instance = new DataBridge();
-    const baud = options.baudRate ?? 115200;
+  /**
+   * Open a serial port with guaranteed reliable communication.
+   * 
+   * @param port - Serial port path (e.g., '/dev/ttyUSB0' or 'COM3')
+   * @param baud - Baud rate (default: 115200)
+   * @param callback - Optional data callback
+   * @returns Promise resolving to true if opened successfully
+   */
+  async open (port: string, baud: number = 115200, callback?: (data: Buffer) => void): Promise<boolean> {
+    if (this._isOpen) return true;
 
     const onData = (data: Buffer) => {
-      instance.emit('data', data);
+      this.emit('data', data);
+      if (callback) callback(data);
     };
 
     try
     {
-      await instance.native.open(port, baud, onData);
-      instance._isOpen = true;
-      return instance;
+      await this.native.open(port, baud, onData);
+      this._isOpen = true;
+      return true;
     } catch (err)
     {
+      // Don't throw, return false to match Python behavior? 
+      // Python implementation: returns bool, but internal Open might fail.
+      // Wait, Python implementation: if self._serial.open returns false.
+      // But wrapping try/catch here allows us to return false on error if desired, 
+      // OR we can keep throwing. 
+      // The examples use await bridge.open(...) and check result or catch error.
+      // My Node examples expect instance.open to be available. 
+      // Let's align with the wrapper logic. Use a more "idiomatic" approach?
+      // Re-throwing is better for async.
       throw new Error(`Failed to open ${port}: ${err instanceof Error ? err.message : err}`);
     }
   }

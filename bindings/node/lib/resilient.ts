@@ -75,9 +75,8 @@ export class ResilientDataBridge extends EventEmitter {
   private async connect (): Promise<void> {
     try
     {
-      this.bridge = await DataBridge.open(this.port, {
-        baudRate: this.options.baudRate,
-      });
+      this.bridge = new DataBridge();
+      await this.bridge.open(this.port, this.options.baudRate);
 
       this.isConnected = true;
       this.reconnectAttempt = 0;
