@@ -100,7 +100,7 @@ int main() {
                 uint16_t len = std::min((uint16_t)(total_len - start), max_payload);
                 std::string chunk = full_payload.substr(start, len);
 
-                std::cout << "Senidng Seq " << (int)current_seq << " Frag " << i << "/" << total_frags << std::endl;
+                std::cout << "Sending Seq " << (int)current_seq << " Frag " << i << "/" << total_frags << std::endl;
                 
                 auto pkt = Packet::serialize(Packet::TYPE_DATA, current_seq, chunk, i, total_frags);
                 
