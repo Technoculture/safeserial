@@ -138,7 +138,7 @@ void run_sender(ISerialPort& serial, int items) {
         if(handshook) break;
     }
 
-    std::mt19937 rng(42); // Determinstic for now
+    std::mt19937 rng(42); // Deterministic for now
     
     for (int i=0; i<items; ++i) {
         // Generate random payload
