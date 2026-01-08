@@ -14,10 +14,12 @@ async function main() {
     if (isOpen) {
       console.log('Port opened successfully');
 
-        const msg = `Hello using DataBridge`;
-        console.log(`[TX] ${msg}`);
-        await bridge.send(msg);
+      const msg = `Hello using DataBridge`;
+      console.log(`[TX] ${msg}`);
+      await bridge.send(msg);
     }
+  } catch (err) {
+    console.error("Error:", err);
   }
 }
 
