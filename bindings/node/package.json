@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "install": "prebuild-install || cmake-js compile",
+    "install": "node scripts/copy_deps.js && (prebuild-install || cmake-js compile)",
     "build": "npm run build:native && npm run build:ts",
     "build:native": "cmake-js compile",
     "build:ts": "tsup lib/index.ts --format cjs,esm --dts",
@@ -29,6 +29,7 @@
     "deps",
     "src",
     "lib",
+    "scripts",
     "CMakeLists.txt"
   ],
   "dependencies": {
@@ -43,7 +44,7 @@
     "vitest": "^1.0.0"
   },
   "engines": {
-    "node": ">=23.0.0"
+    "node": ">=18.0.0"
   },
   "os": [
     "win32",
