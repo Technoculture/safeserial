@@ -6,6 +6,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 enable_testing()
 
+# Sanitizer configuration (Clang/GCC only)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(DATA_BRIDGE_SANITIZERS "" CACHE STRING "Semicolon or comma-separated sanitizers (address,undefined,thread,leak)")
+include(Sanitizers)
+
 # Library is in src/
 add_subdirectory(src)
 

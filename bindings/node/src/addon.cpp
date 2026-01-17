@@ -9,6 +9,8 @@
  */
 
 #include <napi.h>
+#include <data_bridge/data_bridge.hpp>
+#include <data_bridge/resilient_bridge.hpp>
 #include <data_bridge/transport/serial_port.hpp>
 #include <data_bridge/protocol/packet.hpp>
 #include <data_bridge/protocol/reassembler.hpp>
@@ -39,6 +41,20 @@ private:
     void ReceiveLoop();
     void StopReceiveLoop();
 };
+
+static uint32_t GetUInt32(const Napi::Object& obj, const char* key, uint32_t fallback) {
+    if (obj.Has(key) && obj.Get(key).IsNumber()) {
+        return obj.Get(key).As<Napi::Number>().Uint32Value();
+    }
+    return fallback;
+}
+
+static bool GetBool(const Napi::Object& obj, const char* key, bool fallback) {
+    if (obj.Has(key) && obj.Get(key).IsBoolean()) {
+        return obj.Get(key).As<Napi::Boolean>().Value();
+    }
+    return fallback;
+}
 
 Napi::Object SerialPortWrapper::Init(Napi::Env env, Napi::Object exports) {
     Napi::Function func = DefineClass(env, "SerialPort", {
@@ -165,6 +181,466 @@ private:
     static Napi::Value Serialize(const Napi::CallbackInfo& info);
     static Napi::Value Deserialize(const Napi::CallbackInfo& info);
 };
+
+// --- DataBridge Wrapper ---
+class DataBridgeWrapper : public Napi::ObjectWrap<DataBridgeWrapper> {
+public:
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    DataBridgeWrapper(const Napi::CallbackInfo& info);
+    ~DataBridgeWrapper();
+
+private:
+    Napi::Value Open(const Napi::CallbackInfo& info);
+    Napi::Value Close(const Napi::CallbackInfo& info);
+    Napi::Value Send(const Napi::CallbackInfo& info);
+    Napi::Value IsOpen(const Napi::CallbackInfo& info);
+    Napi::Value OnData(const Napi::CallbackInfo& info);
+
+    std::unique_ptr<DataBridge> bridge_;
+    Napi::ThreadSafeFunction tsfn_;
+};
+
+// --- ResilientDataBridge Wrapper ---
+class ResilientDataBridgeWrapper : public Napi::ObjectWrap<ResilientDataBridgeWrapper> {
+public:
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    ResilientDataBridgeWrapper(const Napi::CallbackInfo& info);
+    ~ResilientDataBridgeWrapper();
+
+private:
+    Napi::Value Open(const Napi::CallbackInfo& info);
+    Napi::Value Close(const Napi::CallbackInfo& info);
+    Napi::Value Send(const Napi::CallbackInfo& info);
+    Napi::Value IsConnected(const Napi::CallbackInfo& info);
+    Napi::Value QueueLength(const Napi::CallbackInfo& info);
+
+    Napi::Value OnData(const Napi::CallbackInfo& info);
+    Napi::Value OnError(const Napi::CallbackInfo& info);
+    Napi::Value OnDisconnect(const Napi::CallbackInfo& info);
+    Napi::Value OnReconnecting(const Napi::CallbackInfo& info);
+    Napi::Value OnReconnected(const Napi::CallbackInfo& info);
+    Napi::Value OnClose(const Napi::CallbackInfo& info);
+
+    std::unique_ptr<ResilientDataBridge> bridge_;
+    Napi::ThreadSafeFunction data_tsfn_;
+    Napi::ThreadSafeFunction error_tsfn_;
+    Napi::ThreadSafeFunction disconnect_tsfn_;
+    Napi::ThreadSafeFunction reconnecting_tsfn_;
+    Napi::ThreadSafeFunction reconnected_tsfn_;
+    Napi::ThreadSafeFunction close_tsfn_;
+};
+
+Napi::Object ResilientDataBridgeWrapper::Init(Napi::Env env, Napi::Object exports) {
+    Napi::Function func = DefineClass(env, "ResilientDataBridge", {
+        InstanceMethod("open", &ResilientDataBridgeWrapper::Open),
+        InstanceMethod("close", &ResilientDataBridgeWrapper::Close),
+        InstanceMethod("send", &ResilientDataBridgeWrapper::Send),
+        InstanceMethod("isConnected", &ResilientDataBridgeWrapper::IsConnected),
+        InstanceMethod("queueLength", &ResilientDataBridgeWrapper::QueueLength),
+        InstanceMethod("onData", &ResilientDataBridgeWrapper::OnData),
+        InstanceMethod("onError", &ResilientDataBridgeWrapper::OnError),
+        InstanceMethod("onDisconnect", &ResilientDataBridgeWrapper::OnDisconnect),
+        InstanceMethod("onReconnecting", &ResilientDataBridgeWrapper::OnReconnecting),
+        InstanceMethod("onReconnected", &ResilientDataBridgeWrapper::OnReconnected),
+        InstanceMethod("onClose", &ResilientDataBridgeWrapper::OnClose),
+    });
+    exports.Set("ResilientDataBridge", func);
+    return exports;
+}
+
+ResilientDataBridgeWrapper::ResilientDataBridgeWrapper(const Napi::CallbackInfo& info)
+    : Napi::ObjectWrap<ResilientDataBridgeWrapper>(info) {
+    ResilientDataBridge::Options options = ResilientDataBridge::Options::Defaults();
+    if (info.Length() >= 1 && info[0].IsObject()) {
+        Napi::Object opts = info[0].As<Napi::Object>();
+        options.bridge.baud_rate = static_cast<int>(GetUInt32(opts, "baudRate", options.bridge.baud_rate));
+        options.bridge.max_retries = static_cast<uint8_t>(GetUInt32(opts, "maxRetries", options.bridge.max_retries));
+        options.bridge.ack_timeout_ms = static_cast<uint16_t>(GetUInt32(opts, "ackTimeoutMs", options.bridge.ack_timeout_ms));
+        options.bridge.fragment_size = static_cast<uint16_t>(GetUInt32(opts, "fragmentSize", options.bridge.fragment_size));
+        options.reconnect = GetBool(opts, "reconnect", options.reconnect);
+        options.reconnect_delay_ms = GetUInt32(opts, "reconnectDelay", options.reconnect_delay_ms);
+        options.max_reconnect_delay_ms = GetUInt32(opts, "maxReconnectDelay", options.max_reconnect_delay_ms);
+        options.max_queue_size = GetUInt32(opts, "maxQueueSize", static_cast<uint32_t>(options.max_queue_size));
+    }
+    bridge_ = std::make_unique<ResilientDataBridge>(options);
+}
+
+ResilientDataBridgeWrapper::~ResilientDataBridgeWrapper() {
+    if (bridge_) {
+        bridge_->set_on_data(nullptr);
+        bridge_->set_on_error(nullptr);
+        bridge_->set_on_disconnect(nullptr);
+        bridge_->set_on_reconnecting(nullptr);
+        bridge_->set_on_reconnected(nullptr);
+        bridge_->set_on_close(nullptr);
+        bridge_->close();
+    }
+    if (data_tsfn_) data_tsfn_.Release();
+    if (error_tsfn_) error_tsfn_.Release();
+    if (disconnect_tsfn_) disconnect_tsfn_.Release();
+    if (reconnecting_tsfn_) reconnecting_tsfn_.Release();
+    if (reconnected_tsfn_) reconnected_tsfn_.Release();
+    if (close_tsfn_) close_tsfn_.Release();
+}
+
+Napi::Value ResilientDataBridgeWrapper::Open(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsString()) {
+        Napi::TypeError::New(env, "Port path required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    std::string port = info[0].As<Napi::String>().Utf8Value();
+    bool ok = bridge_->open(port);
+    return Napi::Boolean::New(env, ok);
+}
+
+Napi::Value ResilientDataBridgeWrapper::Close(const Napi::CallbackInfo& info) {
+    bridge_->close();
+    return Napi::Boolean::New(info.Env(), true);
+}
+
+Napi::Value ResilientDataBridgeWrapper::Send(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1) {
+        Napi::TypeError::New(env, "Data required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    std::vector<uint8_t> data;
+    if (info[0].IsBuffer()) {
+        Napi::Buffer<uint8_t> buf = info[0].As<Napi::Buffer<uint8_t>>();
+        data.assign(buf.Data(), buf.Data() + buf.Length());
+    } else {
+        std::string payload = info[0].ToString().Utf8Value();
+        data.assign(payload.begin(), payload.end());
+    }
+
+    try {
+        int written = bridge_->send(data);
+        return Napi::Number::New(env, written);
+    } catch (const std::exception& ex) {
+        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+}
+
+Napi::Value ResilientDataBridgeWrapper::IsConnected(const Napi::CallbackInfo& info) {
+    return Napi::Boolean::New(info.Env(), bridge_->is_connected());
+}
+
+Napi::Value ResilientDataBridgeWrapper::QueueLength(const Napi::CallbackInfo& info) {
+    return Napi::Number::New(info.Env(), bridge_->queue_length());
+}
+
+Napi::Value ResilientDataBridgeWrapper::OnData(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsFunction()) {
+        Napi::TypeError::New(env, "Callback required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    if (data_tsfn_) {
+        data_tsfn_.Release();
+    }
+
+    data_tsfn_ = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(),
+        "ResilientDataBridge Data Callback",
+        0, 1);
+
+    bridge_->set_on_data([this](const std::vector<uint8_t>& data) {
+        auto payload = new std::vector<uint8_t>(data);
+        auto status = data_tsfn_.BlockingCall(payload, [](Napi::Env env, Napi::Function callback, std::vector<uint8_t>* payload) {
+            callback.Call({
+                Napi::Buffer<uint8_t>::Copy(env, payload->data(), payload->size())
+            });
+            delete payload;
+        });
+        if (status != napi_ok) {
+            delete payload;
+        }
+    });
+
+    return env.Undefined();
+}
+
+Napi::Value ResilientDataBridgeWrapper::OnError(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsFunction()) {
+        Napi::TypeError::New(env, "Callback required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    if (error_tsfn_) {
+        error_tsfn_.Release();
+    }
+
+    error_tsfn_ = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(),
+        "ResilientDataBridge Error Callback",
+        0, 1);
+
+    bridge_->set_on_error([this](const std::string& message) {
+        auto payload = new std::string(message);
+        auto status = error_tsfn_.BlockingCall(payload, [](Napi::Env env, Napi::Function callback, std::string* payload) {
+            callback.Call({ Napi::String::New(env, *payload) });
+            delete payload;
+        });
+        if (status != napi_ok) {
+            delete payload;
+        }
+    });
+
+    return env.Undefined();
+}
+
+Napi::Value ResilientDataBridgeWrapper::OnDisconnect(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsFunction()) {
+        Napi::TypeError::New(env, "Callback required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    if (disconnect_tsfn_) {
+        disconnect_tsfn_.Release();
+    }
+
+    disconnect_tsfn_ = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(),
+        "ResilientDataBridge Disconnect Callback",
+        0, 1);
+
+    bridge_->set_on_disconnect([this]() {
+        auto status = disconnect_tsfn_.BlockingCall([](Napi::Env env, Napi::Function callback) {
+            callback.Call({});
+        });
+        if (status != napi_ok) {
+            return;
+        }
+    });
+
+    return env.Undefined();
+}
+
+Napi::Value ResilientDataBridgeWrapper::OnReconnecting(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsFunction()) {
+        Napi::TypeError::New(env, "Callback required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    if (reconnecting_tsfn_) {
+        reconnecting_tsfn_.Release();
+    }
+
+    reconnecting_tsfn_ = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(),
+        "ResilientDataBridge Reconnecting Callback",
+        0, 1);
+
+    bridge_->set_on_reconnecting([this](uint32_t attempt, uint32_t delay) {
+        auto payload = new std::pair<uint32_t, uint32_t>(attempt, delay);
+        auto status = reconnecting_tsfn_.BlockingCall(payload, [](Napi::Env env, Napi::Function callback, std::pair<uint32_t, uint32_t>* payload) {
+            callback.Call({
+                Napi::Number::New(env, payload->first),
+                Napi::Number::New(env, payload->second)
+            });
+            delete payload;
+        });
+        if (status != napi_ok) {
+            delete payload;
+        }
+    });
+
+    return env.Undefined();
+}
+
+Napi::Value ResilientDataBridgeWrapper::OnReconnected(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsFunction()) {
+        Napi::TypeError::New(env, "Callback required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    if (reconnected_tsfn_) {
+        reconnected_tsfn_.Release();
+    }
+
+    reconnected_tsfn_ = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(),
+        "ResilientDataBridge Reconnected Callback",
+        0, 1);
+
+    bridge_->set_on_reconnected([this]() {
+        auto status = reconnected_tsfn_.BlockingCall([](Napi::Env env, Napi::Function callback) {
+            callback.Call({});
+        });
+        if (status != napi_ok) {
+            return;
+        }
+    });
+
+    return env.Undefined();
+}
+
+Napi::Value ResilientDataBridgeWrapper::OnClose(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsFunction()) {
+        Napi::TypeError::New(env, "Callback required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    if (close_tsfn_) {
+        close_tsfn_.Release();
+    }
+
+    close_tsfn_ = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(),
+        "ResilientDataBridge Close Callback",
+        0, 1);
+
+    bridge_->set_on_close([this]() {
+        auto status = close_tsfn_.BlockingCall([](Napi::Env env, Napi::Function callback) {
+            callback.Call({});
+        });
+        if (status != napi_ok) {
+            return;
+        }
+    });
+
+    return env.Undefined();
+}
+
+Napi::Object DataBridgeWrapper::Init(Napi::Env env, Napi::Object exports) {
+    Napi::Function func = DefineClass(env, "DataBridge", {
+        InstanceMethod("open", &DataBridgeWrapper::Open),
+        InstanceMethod("close", &DataBridgeWrapper::Close),
+        InstanceMethod("send", &DataBridgeWrapper::Send),
+        InstanceMethod("isOpen", &DataBridgeWrapper::IsOpen),
+        InstanceMethod("onData", &DataBridgeWrapper::OnData),
+    });
+    exports.Set("DataBridge", func);
+    return exports;
+}
+
+DataBridgeWrapper::DataBridgeWrapper(const Napi::CallbackInfo& info)
+    : Napi::ObjectWrap<DataBridgeWrapper>(info) {
+    bridge_ = std::make_unique<DataBridge>();
+}
+
+DataBridgeWrapper::~DataBridgeWrapper() {
+    if (bridge_) {
+        bridge_->set_on_data(nullptr);
+        bridge_->close();
+    }
+    if (tsfn_) {
+        tsfn_.Release();
+    }
+}
+
+Napi::Value DataBridgeWrapper::Open(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsString()) {
+        Napi::TypeError::New(env, "Port path required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    std::string port = info[0].As<Napi::String>().Utf8Value();
+    int baud = -1;
+    if (info.Length() >= 2 && info[1].IsNumber()) {
+        baud = info[1].As<Napi::Number>().Int32Value();
+    }
+
+    bool ok = bridge_->open(port, baud);
+    return Napi::Boolean::New(env, ok);
+}
+
+Napi::Value DataBridgeWrapper::Close(const Napi::CallbackInfo& info) {
+    bridge_->close();
+    return Napi::Boolean::New(info.Env(), true);
+}
+
+Napi::Value DataBridgeWrapper::Send(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1) {
+        Napi::TypeError::New(env, "Data required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    std::vector<uint8_t> data;
+    if (info[0].IsBuffer()) {
+        Napi::Buffer<uint8_t> buf = info[0].As<Napi::Buffer<uint8_t>>();
+        data.assign(buf.Data(), buf.Data() + buf.Length());
+    } else {
+        std::string payload = info[0].ToString().Utf8Value();
+        data.assign(payload.begin(), payload.end());
+    }
+
+    uint16_t ack_timeout_ms = 0;
+    uint8_t max_retries = 0;
+    uint16_t fragment_size = 0;
+    if (info.Length() >= 2 && info[1].IsNumber()) {
+        ack_timeout_ms = info[1].As<Napi::Number>().Uint32Value();
+    }
+    if (info.Length() >= 3 && info[2].IsNumber()) {
+        max_retries = static_cast<uint8_t>(info[2].As<Napi::Number>().Uint32Value());
+    }
+    if (info.Length() >= 4 && info[3].IsNumber()) {
+        fragment_size = info[3].As<Napi::Number>().Uint32Value();
+    }
+
+    try {
+        int written = bridge_->send(data, ack_timeout_ms, max_retries, fragment_size);
+        return Napi::Number::New(env, written);
+    } catch (const std::exception& ex) {
+        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+}
+
+Napi::Value DataBridgeWrapper::IsOpen(const Napi::CallbackInfo& info) {
+    return Napi::Boolean::New(info.Env(), bridge_->is_open());
+}
+
+Napi::Value DataBridgeWrapper::OnData(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsFunction()) {
+        Napi::TypeError::New(env, "Callback required").ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+
+    if (tsfn_) {
+        tsfn_.Release();
+    }
+
+    tsfn_ = Napi::ThreadSafeFunction::New(
+        env,
+        info[0].As<Napi::Function>(),
+        "DataBridge Data Callback",
+        0, 1);
+
+    bridge_->set_on_data([this](const std::vector<uint8_t>& data) {
+        auto payload = new std::vector<uint8_t>(data);
+        auto status = tsfn_.BlockingCall(payload, [](Napi::Env env, Napi::Function callback, std::vector<uint8_t>* payload) {
+            callback.Call({
+                Napi::Buffer<uint8_t>::Copy(env, payload->data(), payload->size())
+            });
+            delete payload;
+        });
+
+        if (status != napi_ok) {
+            delete payload;
+        }
+    });
+
+    return env.Undefined();
+}
 
 Napi::Object PacketWrapper::Init(Napi::Env env, Napi::Object exports) {
     Napi::Function func = DefineClass(env, "Packet", {
@@ -321,10 +797,11 @@ Napi::Value ReassemblerWrapper::GetBufferedSize(const Napi::CallbackInfo& info) 
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
     SerialPortWrapper::Init(env, exports);
+    DataBridgeWrapper::Init(env, exports);
+    ResilientDataBridgeWrapper::Init(env, exports);
     PacketWrapper::Init(env, exports);
     ReassemblerWrapper::Init(env, exports);
     return exports;
 }
 
 NODE_API_MODULE(data_bridge_node, InitAll)
-

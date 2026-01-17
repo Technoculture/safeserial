@@ -1,5 +1,6 @@
 add_executable(reliability_test reliability_test.cpp)
 target_link_libraries(reliability_test PRIVATE data_bridge)
+data_bridge_apply_sanitizers(reliability_test)
 
 # Deep verification tests (requires GoogleTest)
 include(FetchContent)
@@ -13,8 +14,10 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(test_deep_verification test_deep_verification.cpp)
 target_link_libraries(test_deep_verification PRIVATE data_bridge GTest::gtest_main)
+data_bridge_apply_sanitizers(test_deep_verification)
 add_test(NAME DeepVerification COMMAND test_deep_verification)
 
 add_executable(test_crc16 test_crc16.cpp)
 target_link_libraries(test_crc16 PRIVATE data_bridge GTest::gtest_main)
+data_bridge_apply_sanitizers(test_crc16)
 add_test(NAME CRC16 COMMAND test_crc16)

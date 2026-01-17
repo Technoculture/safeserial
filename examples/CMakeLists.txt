@@ -1,2 +1,3 @@
 add_executable(serial_app cli_app.cpp)
 target_link_libraries(serial_app PRIVATE data_bridge)
+data_bridge_apply_sanitizers(serial_app)

@@ -19,6 +19,8 @@ endif()
 pybind11_add_module(_core
     src/data_bridge/_core.cpp
     "${SRC_DIR}/protocol/crc16.cpp"
+    "${SRC_DIR}/data_bridge.cpp"
+    "${SRC_DIR}/resilient_bridge.cpp"
     ${SERIAL_SRC}
 )
 

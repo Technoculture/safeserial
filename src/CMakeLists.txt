@@ -1,6 +1,10 @@
-add_library(data_bridge STATIC 
+add_library(data_bridge STATIC
     protocol/crc16.cpp
+    data_bridge.cpp
+    resilient_bridge.cpp
 )
+
+data_bridge_apply_sanitizers(data_bridge)
 
 # Platform specific sources
 if(WIN32)
@@ -9,7 +13,7 @@ else()
     target_sources(data_bridge PRIVATE transport/platform/linux/linux_serial.cpp)
 endif()
 
-target_include_directories(data_bridge PUBLIC 
+target_include_directories(data_bridge PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )

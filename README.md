@@ -66,6 +66,13 @@ Builds C++ core, Python environment, and Node bindings.
 uv run python bridge.py build
 ```
 
+### Sanitizers (C++ Core)
+Enable sanitizers via the `DATA_BRIDGE_SANITIZERS` env var during configure. Use a semicolon or comma-separated list (Clang/GCC).
+```bash
+DATA_BRIDGE_SANITIZERS=address,undefined uv run python bridge.py build
+DATA_BRIDGE_SANITIZERS=thread uv run python bridge.py build
+```
+
 ## Testing & Verification
 
 The project includes a universal CLI tool `bridge.py` to manage builds and tests.

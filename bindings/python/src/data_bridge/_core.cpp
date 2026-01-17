@@ -1,5 +1,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <algorithm>
+#include <cstring>
+#include <data_bridge/data_bridge.hpp>
+#include <data_bridge/resilient_bridge.hpp>
 #include <data_bridge/protocol/packet.hpp>
 #include <data_bridge/protocol/reassembler.hpp>
 #include <data_bridge/transport/serial_port.hpp>
@@ -17,6 +21,42 @@ std::vector<uint8_t> bytes_to_vec(py::bytes b) {
     const uint8_t* data = reinterpret_cast<const uint8_t*>(s.data());
     return std::vector<uint8_t>(data, data + s.size());
 }
+
+class PySerialPortAdapter : public ISerialPort {
+public:
+    explicit PySerialPortAdapter(py::object obj) : obj_(std::move(obj)) {}
+
+    bool open(const std::string& port_name, int baud_rate) override {
+        py::gil_scoped_acquire gil;
+        return obj_.attr("open")(port_name, baud_rate).cast<bool>();
+    }
+
+    void close() override {
+        py::gil_scoped_acquire gil;
+        obj_.attr("close")();
+    }
+
+    int write(const std::vector<uint8_t>& data) override {
+        py::gil_scoped_acquire gil;
+        py::bytes payload(reinterpret_cast<const char*>(data.data()), data.size());
+        return obj_.attr("write")(payload).cast<int>();
+    }
+
+    int read(uint8_t* buffer, size_t size) override {
+        py::gil_scoped_acquire gil;
+        py::object res = obj_.attr("read")(size);
+        py::bytes payload = res;
+        std::string s = payload;
+        size_t n = std::min(size, s.size());
+        if (n > 0) {
+            std::memcpy(buffer, s.data(), n);
+        }
+        return static_cast<int>(n);
+    }
+
+private:
+    py::object obj_;
+};
 
 PYBIND11_MODULE(_core, m) {
     m.doc() = "Python bindings for Data Bridge SDK";
@@ -109,4 +149,215 @@ PYBIND11_MODULE(_core, m) {
             buf.resize(n);
             return vec_to_bytes(buf);
         });
+
+    py::class_<DataBridge>(m, "DataBridge")
+        .def(py::init<>())
+        .def(py::init([](py::object serial_override,
+                         int baud_rate,
+                         uint8_t max_retries,
+                         uint16_t ack_timeout_ms,
+                         uint16_t fragment_size) {
+            DataBridge::Options options = DataBridge::Options::Defaults();
+            options.baud_rate = baud_rate;
+            options.max_retries = max_retries;
+            options.ack_timeout_ms = ack_timeout_ms;
+            options.fragment_size = fragment_size;
+
+            auto serial = std::make_shared<PySerialPortAdapter>(std::move(serial_override));
+            return new DataBridge(std::move(serial), options);
+        }),
+        py::kw_only(),
+        py::arg("serial"),
+        py::arg("baud_rate") = DataBridge::Options::Defaults().baud_rate,
+        py::arg("max_retries") = DataBridge::Options::Defaults().max_retries,
+        py::arg("ack_timeout_ms") = DataBridge::Options::Defaults().ack_timeout_ms,
+        py::arg("fragment_size") = DataBridge::Options::Defaults().fragment_size)
+        .def("open", [](DataBridge& self,
+                        const std::string& port,
+                        int baud_rate,
+                        py::object on_data) {
+            if (!on_data.is_none()) {
+                py::function cb = on_data.cast<py::function>();
+                self.set_on_data([cb = std::move(cb)](const std::vector<uint8_t>& data) {
+                    py::gil_scoped_acquire gil;
+                    cb(vec_to_bytes(data));
+                });
+            }
+            return self.open(port, baud_rate);
+        }, py::arg("port"), py::arg("baud_rate") = -1, py::arg("on_data") = py::none())
+        .def("close", &DataBridge::close)
+        .def("is_open", &DataBridge::is_open)
+        .def("send", [](DataBridge& self,
+                        py::object data,
+                        uint16_t ack_timeout_ms,
+                        uint8_t max_retries,
+                        uint16_t fragment_size) {
+            std::vector<uint8_t> vec;
+            if (py::isinstance<py::bytes>(data)) {
+                vec = bytes_to_vec(data.cast<py::bytes>());
+            } else {
+                std::string s = data.cast<std::string>();
+                vec.assign(s.begin(), s.end());
+            }
+            py::gil_scoped_release release;
+            return self.send(vec, ack_timeout_ms, max_retries, fragment_size);
+        }, py::arg("data"),
+        py::arg("ack_timeout_ms") = 0,
+        py::arg("max_retries") = 0,
+        py::arg("fragment_size") = 0)
+        .def("on", [](DataBridge& self, const std::string& event, py::function cb) {
+            if (event != "data") {
+                throw py::value_error("Unsupported event");
+            }
+            self.set_on_data([cb = std::move(cb)](const std::vector<uint8_t>& data) {
+                py::gil_scoped_acquire gil;
+                cb(vec_to_bytes(data));
+            });
+        })
+        .def("set_on_data", [](DataBridge& self, py::function cb) {
+            self.set_on_data([cb = std::move(cb)](const std::vector<uint8_t>& data) {
+                py::gil_scoped_acquire gil;
+                cb(vec_to_bytes(data));
+            });
+        })
+        .def("get_buffered_size", &DataBridge::get_buffered_size)
+        .def("get_received_bytes", &DataBridge::get_buffered_size);
+
+    py::class_<ResilientDataBridge>(m, "ResilientDataBridge")
+        .def(py::init<>())
+        .def(py::init([](int baud_rate,
+                         uint8_t max_retries,
+                         uint16_t ack_timeout_ms,
+                         uint16_t fragment_size,
+                         bool reconnect,
+                         uint32_t reconnect_delay_ms,
+                         uint32_t max_reconnect_delay_ms,
+                         size_t max_queue_size) {
+            ResilientDataBridge::Options options = ResilientDataBridge::Options::Defaults();
+            options.bridge.baud_rate = baud_rate;
+            options.bridge.max_retries = max_retries;
+            options.bridge.ack_timeout_ms = ack_timeout_ms;
+            options.bridge.fragment_size = fragment_size;
+            options.reconnect = reconnect;
+            options.reconnect_delay_ms = reconnect_delay_ms;
+            options.max_reconnect_delay_ms = max_reconnect_delay_ms;
+            options.max_queue_size = max_queue_size;
+            return new ResilientDataBridge(options);
+        }),
+        py::kw_only(),
+        py::arg("baud_rate") = ResilientDataBridge::Options::Defaults().bridge.baud_rate,
+        py::arg("max_retries") = ResilientDataBridge::Options::Defaults().bridge.max_retries,
+        py::arg("ack_timeout_ms") = ResilientDataBridge::Options::Defaults().bridge.ack_timeout_ms,
+        py::arg("fragment_size") = ResilientDataBridge::Options::Defaults().bridge.fragment_size,
+        py::arg("reconnect") = ResilientDataBridge::Options::Defaults().reconnect,
+        py::arg("reconnect_delay_ms") = ResilientDataBridge::Options::Defaults().reconnect_delay_ms,
+        py::arg("max_reconnect_delay_ms") = ResilientDataBridge::Options::Defaults().max_reconnect_delay_ms,
+        py::arg("max_queue_size") = ResilientDataBridge::Options::Defaults().max_queue_size)
+        .def("open", [](ResilientDataBridge& self,
+                        const std::string& port,
+                        py::object on_data) {
+            if (!on_data.is_none()) {
+                py::function cb = on_data.cast<py::function>();
+                self.set_on_data([cb = std::move(cb)](const std::vector<uint8_t>& data) {
+                    py::gil_scoped_acquire gil;
+                    cb(vec_to_bytes(data));
+                });
+            }
+            return self.open(port);
+        }, py::arg("port"), py::arg("on_data") = py::none())
+        .def("close", &ResilientDataBridge::close)
+        .def("send", [](ResilientDataBridge& self, py::object data) {
+            std::vector<uint8_t> vec;
+            if (py::isinstance<py::bytes>(data)) {
+                vec = bytes_to_vec(data.cast<py::bytes>());
+            } else {
+                std::string s = data.cast<std::string>();
+                vec.assign(s.begin(), s.end());
+            }
+            py::gil_scoped_release release;
+            return self.send(vec);
+        }, py::arg("data"))
+        .def("on", [](ResilientDataBridge& self, const std::string& event, py::function cb) {
+            if (event == "data") {
+                self.set_on_data([cb = std::move(cb)](const std::vector<uint8_t>& data) {
+                    py::gil_scoped_acquire gil;
+                    cb(vec_to_bytes(data));
+                });
+                return;
+            }
+            if (event == "disconnect") {
+                self.set_on_disconnect([cb = std::move(cb)]() {
+                    py::gil_scoped_acquire gil;
+                    cb();
+                });
+                return;
+            }
+            if (event == "reconnecting") {
+                self.set_on_reconnecting([cb = std::move(cb)](uint32_t attempt, uint32_t delay) {
+                    py::gil_scoped_acquire gil;
+                    cb(attempt, delay);
+                });
+                return;
+            }
+            if (event == "reconnected") {
+                self.set_on_reconnected([cb = std::move(cb)]() {
+                    py::gil_scoped_acquire gil;
+                    cb();
+                });
+                return;
+            }
+            if (event == "error") {
+                self.set_on_error([cb = std::move(cb)](const std::string& msg) {
+                    py::gil_scoped_acquire gil;
+                    cb(msg);
+                });
+                return;
+            }
+            if (event == "close") {
+                self.set_on_close([cb = std::move(cb)]() {
+                    py::gil_scoped_acquire gil;
+                    cb();
+                });
+                return;
+            }
+            throw py::value_error("Unsupported event");
+        })
+        .def("set_on_data", [](ResilientDataBridge& self, py::function cb) {
+            self.set_on_data([cb = std::move(cb)](const std::vector<uint8_t>& data) {
+                py::gil_scoped_acquire gil;
+                cb(vec_to_bytes(data));
+            });
+        })
+        .def("set_on_error", [](ResilientDataBridge& self, py::function cb) {
+            self.set_on_error([cb = std::move(cb)](const std::string& msg) {
+                py::gil_scoped_acquire gil;
+                cb(msg);
+            });
+        })
+        .def("set_on_disconnect", [](ResilientDataBridge& self, py::function cb) {
+            self.set_on_disconnect([cb = std::move(cb)]() {
+                py::gil_scoped_acquire gil;
+                cb();
+            });
+        })
+        .def("set_on_reconnecting", [](ResilientDataBridge& self, py::function cb) {
+            self.set_on_reconnecting([cb = std::move(cb)](uint32_t attempt, uint32_t delay) {
+                py::gil_scoped_acquire gil;
+                cb(attempt, delay);
+            });
+        })
+        .def("set_on_reconnected", [](ResilientDataBridge& self, py::function cb) {
+            self.set_on_reconnected([cb = std::move(cb)]() {
+                py::gil_scoped_acquire gil;
+                cb();
+            });
+        })
+        .def("set_on_close", [](ResilientDataBridge& self, py::function cb) {
+            self.set_on_close([cb = std::move(cb)]() {
+                py::gil_scoped_acquire gil;
+                cb();
+            });
+        })
+        .def("is_connected", &ResilientDataBridge::is_connected)
+        .def("queue_length", &ResilientDataBridge::queue_length);
 }
