@@ -6,7 +6,7 @@ Serial communication is unreliable. Bits flip. Packets drop. Cables disconnect. 
 
 Data Bridge ensures every byte arrives exactly as sent, or you know about it.
 
-![Serial Data Corruption Examples](reliability_plot.png)
+![Serial Data Corruption Examples](docs/reliability_plot.png)
 
 ## The Problem
 
@@ -172,7 +172,7 @@ uv run python bridge.py publish      # Publish both
 uv run python bridge.py publish python # Publish only Python bindings
 ```
 
-![Fault Tolerance Test Results](docs/test_timeline.png)
+![Fault Tolerance Test Results](docs/traceability/artifacts/latest/test_timeline.png)
 
 ---
 

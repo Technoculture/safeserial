@@ -17,3 +17,6 @@
 
 5) Coverage
 - `scripts/run_coverage.sh` produces `docs/coverage/index.html` when `gcovr` is installed.
+
+6) End to End Verification
+- Communicate between a computer running a python script (`bindings/python/scripts/sender.py`) Ubuntu, and a computer running a nodejs test script (`bindings/node/scripts/test_e2e.js`)

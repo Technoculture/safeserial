@@ -239,7 +239,7 @@ if __name__ == "__main__":
 
     if not Path(report_path).exists():
         print(f"Error: {report_path} not found")
-        print("Run the verification suite first: python tests/verification_suite.py")
+        print("Run the verification suite first: python bridge.py test verify")
         sys.exit(1)
 
     results = parse_test_report(report_path)

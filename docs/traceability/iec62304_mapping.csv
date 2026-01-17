@@ -1,6 +1,12 @@
 RequirementID,SoftwareItem,IntegrationSystemTest,Evidence
-REQ-PROTO-CRC-001,Protocol (Packet),verify_reliability.py,Test logs
-REQ-PROTO-FRAME-003,Protocol (Packet),verify_reliability.py,Test logs
-REQ-REASSEMBLY-006,Reassembler,verify_reliability.py,Test logs
-REQ-ARQ-RETRY-004,DataBridge,verify_reliability.py,Test logs
-REQ-RECONNECT-009,Resilient,verify_reliability.py,Test logs
+REQ-PROTO-CRC-001,Protocol (Packet),verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-PROTO-COBS-002,Protocol (Packet),verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-PROTO-FRAME-003,Protocol (Packet),verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-REASSEMBLY-005,Reassembler,verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-REASSEMBLY-006,Reassembler,verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-REASSEMBLY-007,Reassembler,verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-SEQ-WRAP-008,Protocol (Packet),verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-ARQ-RETRY-004,DataBridge,verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-ERROR-010,DataBridge,verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-RECONNECT-009,Resilient,verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md
+REQ-INPUT-011,Protocol (Packet),verify_reliability.py,docs/traceability/artifacts/latest/verify_reliability_report.md

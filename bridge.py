@@ -21,6 +21,7 @@ import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # --- Configuration ---
@@ -170,27 +171,95 @@ def task_build(args):
 def task_test(args):
     """Run tests."""
     target = args.target
+    artifacts_dir = PROJECT_ROOT / "docs" / "traceability" / "artifacts" / "latest"
+
+    def run_logged(cmd: list[str], log_path: Path, cwd: Path, title: str, check: bool):
+        info(title)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(log_path, "w") as log_file:
+            start = datetime.utcnow().isoformat() + "Z"
+            log_file.write(f"=== START {start} ===\n")
+            try:
+                proc = subprocess.Popen(
+                    cmd,
+                    cwd=cwd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                )
+                assert proc.stdout is not None
+                for line in proc.stdout:
+                    ts = datetime.utcnow().isoformat() + "Z"
+                    log_file.write(f"[{ts}] {line}")
+                proc.wait()
+                end = datetime.utcnow().isoformat() + "Z"
+                log_file.write(f"=== END {end} (exit {proc.returncode}) ===\n")
+                if check and proc.returncode != 0:
+                    error(f"Command failed: {' '.join(cmd)}")
+                return proc.returncode == 0
+            except subprocess.CalledProcessError as e:
+                if check:
+                    error(f"Command failed: {' '.join(cmd)}\n{e}")
+                return False
+            except FileNotFoundError:
+                warn(f"Command not found: {cmd[0]}")
+                return False
+            except KeyboardInterrupt:
+                print("\nInterrupted.")
+                sys.exit(130)
 
     # Unit Tests
     if target == "unit" or target == "all":
         log("=== Unit Tests ===")
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
 
         # 1. C++
         ctest = shutil.which("ctest")
         if ctest:
-            run([ctest, "--output-on-failure"], cwd=BUILD_DIR, title="C++ Core Tests")
+            run_logged(
+                [ctest, "--output-on-failure"],
+                artifacts_dir / "ctest.log",
+                BUILD_DIR,
+                "C++ Core Tests",
+                True,
+            )
         else:
             warn("ctest not found")
 
         # 2. Python
         log("Python Tests...")
-        uv_run(["python", "-m", "pytest"], cwd=PYTHON_BINDING_DIR)
+        pytest_log = artifacts_dir / "pytest.log"
+        pytest_junit = artifacts_dir / "pytest-junit.xml"
+        uv_run(
+            [
+                "python",
+                "-m",
+                "pytest",
+                "--log-file",
+                str(pytest_log),
+                "--log-file-level",
+                "INFO",
+                "--log-format",
+                "%(asctime)s %(levelname)s %(name)s %(message)s",
+                "--log-date-format",
+                "%Y-%m-%dT%H:%M:%S",
+                "--junitxml",
+                str(pytest_junit),
+            ],
+            cwd=PYTHON_BINDING_DIR,
+        )
 
         # 3. Node.js
         if NODE_DIR.exists():
             log("Node.js Tests...")
             npm = "npm.cmd" if sys.platform == "win32" else "npm"
-            run([npm, "test"], cwd=NODE_DIR, check=False, title="Node.js Tests")
+            run_logged(
+                [npm, "test"],
+                artifacts_dir / "node-test.log",
+                NODE_DIR,
+                "Node.js Tests",
+                False,
+            )
 
     # Reliability/System Tests
     if target == "verify" or target == "all":
@@ -201,6 +270,23 @@ def task_test(args):
         # Using uv with matplotlib for plotting
         uv_cmd = ["--with", "matplotlib", "python", str(script)]
         uv_run(uv_cmd, cwd=PROJECT_ROOT)
+
+        viz_report = (
+            PROJECT_ROOT
+            / "docs"
+            / "traceability"
+            / "artifacts"
+            / "latest"
+            / "verify_reliability_report.md"
+        )
+        viz = SCRIPTS_DIR / "visualize_results.py"
+        uv_run(
+            ["--with", "matplotlib", "python", str(viz), str(viz_report)],
+            cwd=PROJECT_ROOT,
+        )
+
+        diagram = SCRIPTS_DIR / "generate_diagram.py"
+        uv_run(["--with", "matplotlib", "python", str(diagram)], cwd=PROJECT_ROOT)
 
         linker = SCRIPTS_DIR / "link_test_ids.py"
         run(
@@ -244,10 +330,19 @@ def task_viz(args):
     """Generate reports/charts."""
     log("Running Visualization...")
     script = SCRIPTS_DIR / "visualize_results.py"
-    report_file = PROJECT_ROOT / "docs" / "test_report.md"
+    report_file = (
+        PROJECT_ROOT
+        / "docs"
+        / "traceability"
+        / "artifacts"
+        / "latest"
+        / "verify_reliability_report.md"
+    )
 
     if not report_file.exists():
-        warn("No test_report.md found. Run 'bridge.py test verify' first.")
+        warn(
+            "No verify_reliability_report.md found. Run 'bridge.py test verify' first."
+        )
 
     # We pass the log file path if needed, but the script defaults to test_report.md logic
     # Actually the script takes the report file as arg 1
