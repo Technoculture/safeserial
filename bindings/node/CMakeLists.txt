@@ -30,7 +30,6 @@ endif()
 
 # Build core library sources directly
 set(CORE_SOURCES
-    ${PROJECT_ROOT}/src/protocol/crc16.cpp
     ${PROJECT_ROOT}/src/data_bridge.cpp
     ${PROJECT_ROOT}/src/resilient_bridge.cpp
     ${PLATFORM_SOURCES}

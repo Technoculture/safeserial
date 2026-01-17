@@ -1,10 +1,24 @@
 {
-  "timestamp_utc": "2026-01-17T10:24:50.740653Z",
-  "git_commit": "88dd45a62eef00898035f056e83f10149a878da5",
-  "git_status": "M docs/test_report.md\n M docs/test_timeline.png\n M docs/traceability/artifacts/latest/test_report.md\n M docs/traceability/artifacts/latest/test_timeline.png",
+  "timestamp_utc": "2026-01-17T10:33:18.418086Z",
+  "git_commit": "f2bf5326ac443dd5b428072df623f9bc8ab5ae0e",
+  "git_status": "M bindings/node/CMakeLists.txt\n M bindings/python/CMakeLists.txt\n D bindings/python/include_cpp/data_bridge/protocol/crc16.hpp\n D bindings/python/src_cpp/protocol/crc16.cpp\n M bridge.py\n M docs/test_report.md\n M docs/test_timeline.png\n M docs/traceability/README.md\n M docs/traceability/artifacts/latest/manifest.json\n M docs/traceability/artifacts/latest/test_report.md\n M docs/traceability/artifacts/latest/test_timeline.png\n D include/data_bridge/protocol/crc16.hpp\n M scripts/collect_artifacts.py\n M src/CMakeLists.txt\n D src/protocol/crc16.cpp\n?? docs/traceability/artifacts/latest/iec62304_traceability_table.md\n?? docs/traceability/artifacts/latest/requirements.md\n?? docs/traceability/artifacts/latest/risk_controls.md\n?? docs/traceability/artifacts/latest/soup_inventory.md\n?? docs/traceability/artifacts/latest/traceability_matrix.csv\n?? docs/traceability/artifacts/latest/traceability_report.json\n?? docs/traceability/artifacts/latest/traceability_report.md\n?? docs/traceability/artifacts/latest/verification_plan.md\n?? docs/traceability/traceability_report.json\n?? docs/traceability/traceability_report.md\n?? scripts/validate_traceability.py",
   "platform": "macOS-26.2-arm64-arm-64bit",
   "python": "3.10.13",
   "sanitizers": "",
   "coverage": "",
-  "fuzzing": ""
+  "fuzzing": "",
+  "checksums_sha256": {
+    "test_report.md": "21932c4cc3c6489625a526c95f609fb9eb1c479812d5a5695d8b3227df4cb467",
+    "test_timeline.png": "274267e58ba19463844f9091dead0fbcf753e90b1854bd07ecaae8c5db891b7b",
+    "reliability_plot.png": "d0c6f62fe5c45be49452f9eeab7b608f575186fad7fcd0859a9d4986ba94bb8f",
+    "latency_histogram.png": "080aaf3812635440f51b3debdffaf692e78c104e1073e337f6606c22627b56c3",
+    "requirements.md": "bc14d9b67c2833e2e885c2e7254f5cec7645c78b30897b9e7286f555b21b43c8",
+    "risk_controls.md": "f809be06024ccf5c2e5d7a31a6a49f5e5266093754827ad16cfe5e9404a60eb9",
+    "traceability_matrix.csv": "5fac249a6cdef811f66c0d0e5d67134e5ed528e652c3dae8310f8df721c573e7",
+    "verification_plan.md": "30ac6805105821208369679af363477cabe64d1cf00d86790fe77653c9dce62b",
+    "soup_inventory.md": "acaa191a5eaf2d07ce745d43f1ae7a1f6236be903db8d8156c76a52eb15250b1",
+    "iec62304_traceability_table.md": "15cb985a52d10f6ff149a4f627f3701db8bf0b22de25ab7f5f183b4fa0540099",
+    "traceability_report.md": "96512466d41cef321930a00e1081d2153d793660243f12757f5c6db806266b6e",
+    "traceability_report.json": "9128b9c0829d363d14e3511b40de2b3b448a1d6452d099ac91824ec0bb854d16"
+  }
 }

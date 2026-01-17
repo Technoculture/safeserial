@@ -1,5 +1,4 @@
 add_library(data_bridge STATIC
-    protocol/crc16.cpp
     data_bridge.cpp
     resilient_bridge.cpp
 )

@@ -202,6 +202,13 @@ def task_test(args):
         uv_cmd = ["--with", "matplotlib", "python", str(script)]
         uv_run(uv_cmd, cwd=PROJECT_ROOT)
 
+        traceability = SCRIPTS_DIR / "validate_traceability.py"
+        run(
+            [sys.executable, str(traceability)],
+            cwd=PROJECT_ROOT,
+            title="Validating Traceability",
+        )
+
         artifacts = SCRIPTS_DIR / "collect_artifacts.py"
         run(
             [sys.executable, str(artifacts)],

@@ -10,3 +10,7 @@ Contents:
 - `soup_inventory.md`: SOUP inventory template.
 - `iec62304_traceability_table.md`: IEC 62304 traceability template.
 - `artifacts/`: deterministic outputs from verification runs (see `artifacts/README.md`).
+
+Validation:
+- `scripts/validate_traceability.py` checks ID consistency, missing coverage, and test file existence.
+- `traceability_report.md` and `traceability_report.json` summarize validation results.

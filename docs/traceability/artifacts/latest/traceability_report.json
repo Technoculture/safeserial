@@ -1,0 +1,9 @@
+{
+  "timestamp_utc": "2026-01-17T10:33:18.350164Z",
+  "requirements_total": 11,
+  "risk_controls_total": 9,
+  "matrix_rows": 15,
+  "requirements_covered": 11,
+  "errors": [],
+  "warnings": []
+}
