@@ -3,8 +3,8 @@ import time
 
 import pytest
 
-import data_bridge
-from data_bridge import _core
+import safeserial
+from safeserial import _core
 
 # --- Low-Level Binding Tests (Regression) ---
 
@@ -82,7 +82,7 @@ def mock_bridge():
     """Fixture to provide a DataBridge instance with a mocked SerialPort."""
     mock_serial = MockSerial()
 
-    bridge = data_bridge.DataBridge(serial=mock_serial)
+    bridge = safeserial.DataBridge(serial=mock_serial)
     try:
         yield bridge, mock_serial
     finally:

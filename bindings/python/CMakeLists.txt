@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(data_bridge_sdk_python LANGUAGES CXX)
+project(safeserial_sdk_python LANGUAGES CXX)
 
 find_package(pybind11 REQUIRED CONFIG)
 
@@ -23,8 +23,8 @@ endif()
 
 # Bindings module
 pybind11_add_module(_core
-    src/data_bridge/_core.cpp
-    "${SRC_DIR}/data_bridge.cpp"
+    src/safeserial/_core.cpp
+    "${SRC_DIR}/safeserial.cpp"
     "${SRC_DIR}/resilient_bridge.cpp"
     ${SERIAL_SRC}
 )
@@ -34,5 +34,5 @@ target_include_directories(_core PRIVATE ${INCLUDE_DIR})
 # Set C++ standard
 target_compile_features(_core PRIVATE cxx_std_17)
 
-# Install the module to the data_bridge package directory
-install(TARGETS _core DESTINATION data_bridge)
+# Install the module to the safeserial package directory
+install(TARGETS _core DESTINATION safeserial)

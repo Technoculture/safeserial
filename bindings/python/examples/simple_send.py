@@ -1,8 +1,8 @@
 import sys
-import data_bridge
+import safeserial
 
 port = sys.argv[1] if len(sys.argv) > 1 else "/dev/ttyUSB1"
-bridge = data_bridge.DataBridge()
+bridge = safeserial.DataBridge()
 
 print(f"Opening port: {port}")
 

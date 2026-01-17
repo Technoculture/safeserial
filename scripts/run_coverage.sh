@@ -7,7 +7,7 @@ OUT_DIR="${ROOT_DIR}/docs/coverage"
 
 cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" \
   -DCMAKE_BUILD_TYPE=Debug \
-  -DDATA_BRIDGE_COVERAGE=ON
+  -DSAFESERIAL_COVERAGE=ON
 
 if command -v nproc >/dev/null 2>&1; then
   JOBS="$(nproc)"

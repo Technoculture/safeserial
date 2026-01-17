@@ -1,7 +1,7 @@
 import sys
 import time
 import asyncio
-import data_bridge
+import safeserial
 
 async def main():
     if len(sys.argv) < 2:
@@ -14,7 +14,7 @@ async def main():
 
     print(f"[SENDER] Connecting to {port}...")
     
-    bridge = data_bridge.DataBridge()
+    bridge = safeserial.DataBridge()
     
     # We only care about sending, but ARQ needs the read loop active
     def on_data(data):

@@ -41,16 +41,16 @@
     },
     {
       "test_id": "DataBridgeTest.RetriesWhenAckMissing",
-      "matrix_location": "tests/test_data_bridge.cpp",
+      "matrix_location": "tests/test_safeserial.cpp",
       "resolved": true,
-      "resolved_location": "tests/test_data_bridge.cpp",
+      "resolved_location": "tests/test_safeserial.cpp",
       "resolved_line": 106
     },
     {
       "test_id": "DataBridgeTest.SendSingleFragmentAcked",
-      "matrix_location": "tests/test_data_bridge.cpp",
+      "matrix_location": "tests/test_safeserial.cpp",
       "resolved": true,
-      "resolved_location": "tests/test_data_bridge.cpp",
+      "resolved_location": "tests/test_safeserial.cpp",
       "resolved_line": 73
     },
     {

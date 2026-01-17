@@ -5,8 +5,8 @@
 #include <utility>
 #include <cstring>
 #include <algorithm>
-#include <data_bridge/protocol/crc32.hpp>
-#include <data_bridge/config.hpp>
+#include <safeserial/protocol/crc32.hpp>
+#include <safeserial/config.hpp>
 
 // Cross-platform packed struct support
 #if defined(_MSC_VER)
@@ -45,9 +45,9 @@ struct Packet {
     static constexpr uint8_t COBS_DELIMITER = 0x00;
 
     // Configuration accessors (use env vars or defaults)
-    static uint8_t maxRetries() { return DataBridgeConfig::maxRetries(); }
-    static uint16_t retryTimeoutMs() { return DataBridgeConfig::retryTimeoutMs(); }
-    static uint16_t fragmentSize() { return DataBridgeConfig::fragmentSize(); }
+    static uint8_t maxRetries() { return SafeSerialConfig::maxRetries(); }
+    static uint16_t retryTimeoutMs() { return SafeSerialConfig::retryTimeoutMs(); }
+    static uint16_t fragmentSize() { return SafeSerialConfig::fragmentSize(); }
 
     struct Frame {
         Header header;

@@ -2,11 +2,11 @@
 #include <pybind11/stl.h>
 #include <algorithm>
 #include <cstring>
-#include <data_bridge/data_bridge.hpp>
-#include <data_bridge/resilient_bridge.hpp>
-#include <data_bridge/protocol/packet.hpp>
-#include <data_bridge/protocol/reassembler.hpp>
-#include <data_bridge/transport/serial_port.hpp>
+#include <safeserial/safeserial.hpp>
+#include <safeserial/resilient_bridge.hpp>
+#include <safeserial/protocol/packet.hpp>
+#include <safeserial/protocol/reassembler.hpp>
+#include <safeserial/transport/serial_port.hpp>
 
 namespace py = pybind11;
 
@@ -59,11 +59,11 @@ private:
 };
 
 PYBIND11_MODULE(_core, m) {
-    m.doc() = "Python bindings for Data Bridge SDK";
+    m.doc() = "Python bindings for SafeSerial SDK";
 
     // Packet Class
     py::class_<Packet> packet(m, "Packet");
-    
+
     // Packet Constants
     packet.attr("TYPE_DATA") = Packet::TYPE_DATA;
     packet.attr("TYPE_ACK") = Packet::TYPE_ACK;
@@ -94,26 +94,26 @@ PYBIND11_MODULE(_core, m) {
     }, py::arg("type"), py::arg("seq"), py::arg("payload"), py::arg("frag_id") = 0, py::arg("total_frags") = 1);
 
     packet.def_static("deserialize", [](py::object buffer_obj) {
-        // We have to be careful with buffer modification. 
+        // We have to be careful with buffer modification.
         // Packet::deserialize takes std::vector<uint8_t>& and MODIFIES it (removes processed bytes).
         // This is hard to map directly to immutable python bytes.
         // We probably need a stateful buffer class or just pass a bytearray and copy back?
         // OR: Require the user to pass a bytearray, convert to vector, process, update bytearray?
         // Pythonic way: Pass bytes, return (Frame, remaining_bytes).
-        
+
         // Let's implement input as bytes, return (Frame, remaining_bytes)
         py::bytes b = buffer_obj; // or cast
         std::vector<uint8_t> vec = bytes_to_vec(b);
         auto frame = Packet::deserialize(vec);
-        
+
         return py::make_tuple(frame, vec_to_bytes(vec));
     }, "Deserialize a packet from bytes. Returns (Frame, remaining_bytes).");
-    
+
     // Cobs wrappers if needed, but serialize/deserialize handles it usually.
     packet.def_static("cobs_encode", [](py::bytes data) {
          return vec_to_bytes(Packet::cobs_encode(bytes_to_vec(data)));
     });
-    
+
     packet.def_static("cobs_decode", [](py::bytes data) {
          return vec_to_bytes(Packet::cobs_decode(bytes_to_vec(data)));
     });
@@ -133,7 +133,7 @@ PYBIND11_MODULE(_core, m) {
     // SerialPort Class
     // ISerialPort is abstract, SerialPort is concrete.
     py::class_<ISerialPort>(m, "ISerialPort"); // interface binding if needed
-    
+
     py::class_<SerialPort, ISerialPort>(m, "SerialPort")
         .def(py::init<>())
         .def("open", &SerialPort::open)

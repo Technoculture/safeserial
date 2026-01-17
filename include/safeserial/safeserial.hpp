@@ -10,11 +10,11 @@
 #include <thread>
 #include <vector>
 
-#include <data_bridge/config.hpp>
-#include <data_bridge/protocol/packet.hpp>
-#include <data_bridge/protocol/reassembler.hpp>
-#include <data_bridge/transport/iserial_port.hpp>
-#include <data_bridge/transport/serial_port.hpp>
+#include <safeserial/config.hpp>
+#include <safeserial/protocol/packet.hpp>
+#include <safeserial/protocol/reassembler.hpp>
+#include <safeserial/transport/iserial_port.hpp>
+#include <safeserial/transport/serial_port.hpp>
 
 class DataBridge {
 public:
@@ -26,10 +26,10 @@ public:
 
         static Options Defaults() {
             return Options{
-                DataBridgeConfig::baudRate(),
-                DataBridgeConfig::maxRetries(),
-                DataBridgeConfig::ackTimeoutMs(),
-                DataBridgeConfig::fragmentSize(),
+                SafeSerialConfig::baudRate(),
+                SafeSerialConfig::maxRetries(),
+                SafeSerialConfig::ackTimeoutMs(),
+                SafeSerialConfig::fragmentSize(),
             };
         }
     };

@@ -18,8 +18,8 @@ wheels = [
 ]
 
 [[package]]
-name = "data-bridge"
-version = "0.1.2"
+name = "safeserial"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "pytest", version = "8.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Data Bridge - Universal CLI (bridge.py)
+SafeSerial - Universal CLI (bridge.py)
 
 A single entry point for all project tasks: building, testing, verifying, and visualizing.
 
@@ -18,6 +18,7 @@ Usage:
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -109,17 +110,17 @@ def task_build(args):
 
     # C++ CMake
     cmake_args = ["cmake", ".."]
-    sanitizers = os.environ.get("DATA_BRIDGE_SANITIZERS", "").strip()
+    sanitizers = os.environ.get("SAFESERIAL_SANITIZERS", "").strip()
     if sanitizers:
-        cmake_args.append(f"-DDATA_BRIDGE_SANITIZERS={sanitizers}")
+        cmake_args.append(f"-DSAFESERIAL_SANITIZERS={sanitizers}")
 
-    coverage = os.environ.get("DATA_BRIDGE_COVERAGE", "").strip()
+    coverage = os.environ.get("SAFESERIAL_COVERAGE", "").strip()
     if coverage:
-        cmake_args.append(f"-DDATA_BRIDGE_COVERAGE={coverage}")
+        cmake_args.append(f"-DSAFESERIAL_COVERAGE={coverage}")
 
-    fuzzing = os.environ.get("DATA_BRIDGE_ENABLE_FUZZING", "").strip()
+    fuzzing = os.environ.get("SAFESERIAL_ENABLE_FUZZING", "").strip()
     if fuzzing:
-        cmake_args.append(f"-DDATA_BRIDGE_ENABLE_FUZZING={fuzzing}")
+        cmake_args.append(f"-DSAFESERIAL_ENABLE_FUZZING={fuzzing}")
 
     if not run(cmake_args, cwd=BUILD_DIR, title="Configuring CMake"):
         error("CMake configure failed")
@@ -441,6 +442,83 @@ def task_publish(args):
     log("Publish Complete!")
 
 
+def task_bump(args):
+    """Bump package versions (major/minor/patch)."""
+    part = args.part
+
+    def bump_version(version: str) -> str:
+        major, minor, patch = [int(x) for x in version.split(".")]
+        if part == "major":
+            major += 1
+            minor = 0
+            patch = 0
+        elif part == "minor":
+            minor += 1
+            patch = 0
+        else:
+            patch += 1
+        return f"{major}.{minor}.{patch}"
+
+    # Python version
+    pyproject = PYTHON_BINDING_DIR / "pyproject.toml"
+    py_text = pyproject.read_text()
+    py_match = re.search(
+        r'^version\\s*=\\s*"([0-9]+\\.[0-9]+\\.[0-9]+)"', py_text, re.M
+    )
+    if not py_match:
+        error("Could not find Python version in pyproject.toml")
+    py_version = py_match.group(1)
+    py_next = bump_version(py_version)
+    py_text = re.sub(
+        r'^version\\s*=\\s*"[0-9]+\\.[0-9]+\\.[0-9]+"',
+        f'version = "{py_next}"',
+        py_text,
+        flags=re.M,
+    )
+    pyproject.write_text(py_text)
+
+    uv_lock = PYTHON_BINDING_DIR / "uv.lock"
+    uv_text = uv_lock.read_text()
+    uv_text = re.sub(
+        r'^version\\s*=\\s*"[0-9]+\\.[0-9]+\\.[0-9]+"',
+        f'version = "{py_next}"',
+        uv_text,
+        count=1,
+        flags=re.M,
+    )
+    uv_lock.write_text(uv_text)
+
+    # Node version
+    package_json = NODE_DIR / "package.json"
+    package_text = package_json.read_text()
+    pkg_match = re.search(
+        r'"version"\\s*:\\s*"([0-9]+\\.[0-9]+\\.[0-9]+)"', package_text
+    )
+    if not pkg_match:
+        error("Could not find Node version in package.json")
+    node_version = pkg_match.group(1)
+    node_next = bump_version(node_version)
+    package_text = re.sub(
+        r'"version"\\s*:\\s*"[0-9]+\\.[0-9]+\\.[0-9]+"',
+        f'"version": "{node_next}"',
+        package_text,
+        count=1,
+    )
+    package_json.write_text(package_text)
+
+    package_lock = NODE_DIR / "package-lock.json"
+    lock_text = package_lock.read_text()
+    lock_text = re.sub(
+        r'"version"\\s*:\\s*"[0-9]+\\.[0-9]+\\.[0-9]+"',
+        f'"version": "{node_next}"',
+        lock_text,
+        count=2,
+    )
+    package_lock.write_text(lock_text)
+
+    log(f"Bumped Python to {py_next} and Node to {node_next}")
+
+
 # --- Main CLI ---
 
 
@@ -486,6 +564,10 @@ def main():
         help="Target registry",
     )
 
+    # Bump
+    parser_bump = subparsers.add_parser("bump", help="Bump package versions")
+    parser_bump.add_argument("part", choices=["major", "minor", "patch"])
+
     args = parser.parse_args()
 
     if args.command == "build":
@@ -498,6 +580,8 @@ def main():
         task_clean(args)
     elif args.command == "publish":
         task_publish(args)
+    elif args.command == "bump":
+        task_bump(args)
     else:
         parser.print_help()
         sys.exit(1)

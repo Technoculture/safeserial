@@ -175,7 +175,7 @@ def run_test_cycle(sender_lang, receiver_lang, drop_rate, corrupt_rate, item_cou
 
 def generate_report(results, sender, receiver, report_file):
     report = f"""# Test Record - {sender.upper()}->{receiver.upper()} Reliability
-**Project:** Data Bridge Serial Protocol
+**Project:** SafeSerial Serial Protocol
 **Date:** {datetime.datetime.now().isoformat()}
 **Tester:** Automated Runner
 **Configuration:** Sender={sender}, Receiver={receiver}
@@ -211,7 +211,7 @@ def generate_report(results, sender, receiver, report_file):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run reliability verification tests for Data Bridge."
+        description="Run reliability verification tests for SafeSerial."
     )
     parser.add_argument(
         "--sender",

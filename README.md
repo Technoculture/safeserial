@@ -1,10 +1,10 @@
-# Data Bridge
+# SafeSerial
 
 **When `31.9 mg` becomes `319 mg`, patients die.**
 
 Serial communication is unreliable. Bits flip. Packets drop. Cables disconnect. If your embedded system sends medical dosages, sensor readings, or control commands over UART—you need guarantees, not hope.
 
-Data Bridge ensures every byte arrives exactly as sent, or you know about it.
+SafeSerial ensures every byte arrives exactly as sent, or you know about it.
 
 ![Serial Data Corruption Examples](docs/reliability_plot.png)
 
@@ -37,7 +37,7 @@ Your data arrives intact. Always.
 
 **C++:**
 ```cpp
-#include <data_bridge/protocol/packet.hpp>
+#include <safeserial/protocol/packet.hpp>
 
 auto packet = Packet::serialize(Packet::TYPE_DATA, seq++, sensor_json);
 serial.write(packet);  // Automatic retry until ACK received
@@ -45,7 +45,7 @@ serial.write(packet);  // Automatic retry until ACK received
 
 **TypeScript/Electron:**
 ```typescript
-import { ResilientDataBridge } from '@aspect-labs/data-bridge';
+import { ResilientDataBridge } from '@technoculture/safeserial';
 
 const bridge = await ResilientDataBridge.open('/dev/ttyUSB0');
 
@@ -67,10 +67,10 @@ uv run python bridge.py build
 ```
 
 ### Sanitizers (C++ Core)
-Enable sanitizers via the `DATA_BRIDGE_SANITIZERS` env var during configure. Use a semicolon or comma-separated list (Clang/GCC).
+Enable sanitizers via the `SAFESERIAL_SANITIZERS` env var during configure. Use a semicolon or comma-separated list (Clang/GCC).
 ```bash
-DATA_BRIDGE_SANITIZERS=address,undefined uv run python bridge.py build
-DATA_BRIDGE_SANITIZERS=thread uv run python bridge.py build
+SAFESERIAL_SANITIZERS=address,undefined uv run python bridge.py build
+SAFESERIAL_SANITIZERS=thread uv run python bridge.py build
 ```
 
 ### Coverage & Fuzzing
@@ -97,7 +97,7 @@ What this produces:
 
 Coverage threshold (default 100%):
 ```bash
-DATA_BRIDGE_REQ_COVERAGE=1.0 uv run python bridge.py test verify
+SAFESERIAL_REQ_COVERAGE=1.0 uv run python bridge.py test verify
 ```
 
 ### Traceability Rollup (Submodules)

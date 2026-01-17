@@ -14,8 +14,8 @@
 | PacketTest.CobsRoundtrip | tests/test_deep_verification.cpp | tests/test_deep_verification.cpp | 42 | RESOLVED |
 | PacketTest.DeserializeRejectsTruncated | tests/test_deep_verification.cpp | tests/test_deep_verification.cpp | 112 | RESOLVED |
 | test_deserialize_without_delimiter_is_incomplete | bindings/python/tests/test_protocol_edge.py | bindings/python/tests/test_protocol_edge.py | 16 | RESOLVED |
-| DataBridgeTest.RetriesWhenAckMissing | tests/test_data_bridge.cpp | tests/test_data_bridge.cpp | 106 | RESOLVED |
-| DataBridgeTest.SendSingleFragmentAcked | tests/test_data_bridge.cpp | tests/test_data_bridge.cpp | 73 | RESOLVED |
+| DataBridgeTest.RetriesWhenAckMissing | tests/test_safeserial.cpp | tests/test_safeserial.cpp | 106 | RESOLVED |
+| DataBridgeTest.SendSingleFragmentAcked | tests/test_safeserial.cpp | tests/test_safeserial.cpp | 73 | RESOLVED |
 | PacketTest.ReassemblerMultipleFragments | tests/test_deep_verification.cpp | tests/test_deep_verification.cpp | 167 | RESOLVED |
 | PacketTest.ReassemblerRejectsOutOfOrder | tests/test_deep_verification.cpp | tests/test_deep_verification.cpp | 197 | RESOLVED |
 | PacketTest.ReassemblerDetectsDuplicateFragment | tests/test_deep_verification.cpp | tests/test_deep_verification.cpp | 211 | RESOLVED |

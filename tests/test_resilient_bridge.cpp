@@ -11,8 +11,8 @@
 #include <mutex>
 #include <vector>
 
-#include <data_bridge/resilient_bridge.hpp>
-#include <data_bridge/protocol/packet.hpp>
+#include <safeserial/resilient_bridge.hpp>
+#include <safeserial/protocol/packet.hpp>
 
 namespace {
 

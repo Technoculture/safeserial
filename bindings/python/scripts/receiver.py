@@ -1,7 +1,7 @@
 import sys
 import time
 import asyncio
-import data_bridge
+import safeserial
 
 received_count = 0
 
@@ -25,7 +25,7 @@ async def main():
 
     print(f"[RECEIVER] Connecting to {port}...")
     
-    bridge = data_bridge.DataBridge()
+    bridge = safeserial.DataBridge()
 
     if not bridge.open(port, baud_rate, on_data):
         print(f"[RECEIVER] Failed to open {port}")

@@ -1,5 +1,5 @@
-import data_bridge
-from data_bridge import _core
+import safeserial
+from safeserial import _core
 
 
 def test_deserialize_multiple_frames_returns_remaining():

@@ -1,6 +1,6 @@
-# Data Bridge SDK Python Bindings
+# SafeSerial SDK Python Bindings
 
-Python bindings for the C++ Data Bridge SDK.
+Python bindings for the C++ SafeSerial SDK.
 
 ## Installation
 Development install using `uv`:
@@ -12,10 +12,10 @@ uv pip install -e .
 ## Usage
 
 ```python
-import data_bridge
+import safeserial
 
 # High-Level Reliable Bridge (ARQ)
-bridge = data_bridge.DataBridge()
+bridge = safeserial.DataBridge()
 
 def on_data(data):
     print(f"Received: {data}")

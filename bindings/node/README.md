@@ -1,11 +1,11 @@
-# @technoculture/data-bridge
+# @technoculture/safeserial
 
 Guaranteed reliable serial communication for Node.js and Electron.
 
 ## Installation
 
 ```bash
-npm install @technoculture/data-bridge
+npm install @technoculture/safeserial
 ```
 
 Pre-built binaries are included for Windows and Linux (x64, arm64).
@@ -13,7 +13,7 @@ Pre-built binaries are included for Windows and Linux (x64, arm64).
 ## Usage
 
 ```typescript
-import { DataBridge } from '@technoculture/data-bridge';
+import { DataBridge } from '@technoculture/safeserial';
 
 // Open a serial port
 const bridge = await DataBridge.open('/dev/ttyUSB0', { baudRate: 115200 });

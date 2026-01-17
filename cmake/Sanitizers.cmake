@@ -1,5 +1,5 @@
-function(data_bridge_apply_sanitizers target_name)
-  if(NOT DATA_BRIDGE_SANITIZERS)
+function(safeserial_apply_sanitizers target_name)
+  if(NOT SAFESERIAL_SANITIZERS)
     return()
   endif()
 
@@ -13,7 +13,7 @@ function(data_bridge_apply_sanitizers target_name)
     return()
   endif()
 
-  string(TOLOWER "${DATA_BRIDGE_SANITIZERS}" sanitizer_list)
+  string(TOLOWER "${SAFESERIAL_SANITIZERS}" sanitizer_list)
   string(REPLACE "," ";" sanitizer_list "${sanitizer_list}")
   string(REPLACE " " ";" sanitizer_list "${sanitizer_list}")
 

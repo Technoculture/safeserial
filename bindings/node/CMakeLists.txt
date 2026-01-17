@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(data_bridge_node)
+project(safeserial_node)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -30,7 +30,7 @@ endif()
 
 # Build core library sources directly
 set(CORE_SOURCES
-    ${PROJECT_ROOT}/src/data_bridge.cpp
+    ${PROJECT_ROOT}/src/safeserial.cpp
     ${PROJECT_ROOT}/src/resilient_bridge.cpp
     ${PLATFORM_SOURCES}
 )

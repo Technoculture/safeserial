@@ -9,8 +9,8 @@
 #include <mutex>
 #include <vector>
 
-#include <data_bridge/data_bridge.hpp>
-#include <data_bridge/protocol/packet.hpp>
+#include <safeserial/safeserial.hpp>
+#include <safeserial/protocol/packet.hpp>
 
 namespace {
 

@@ -1,5 +1,5 @@
 #pragma once
-#include <data_bridge/protocol/packet.hpp>
+#include <safeserial/protocol/packet.hpp>
 #include <vector>
 #include <iostream>
 

@@ -1,13 +1,13 @@
 /**
- * Deep Verification Tests for Data Bridge Protocol
+ * Deep Verification Tests for SafeSerial Protocol
  * 
  * Tests edge cases, boundary conditions, and stress scenarios.
  */
 
 #include <gtest/gtest.h>
-#include <data_bridge/protocol/packet.hpp>
-#include <data_bridge/protocol/reassembler.hpp>
-#include <data_bridge/protocol/crc32.hpp>
+#include <safeserial/protocol/packet.hpp>
+#include <safeserial/protocol/reassembler.hpp>
+#include <safeserial/protocol/crc32.hpp>
 #include <random>
 #include <string>
 
@@ -70,7 +70,7 @@ TEST_F(PacketTest, Crc32KnownValue) {
 }
 
 TEST_F(PacketTest, Crc32DetectsCorruption) {
-    std::string original = "Hello, Data Bridge!";
+    std::string original = "Hello, SafeSerial!";
     uint32_t crc1 = CRC32::calculate(reinterpret_cast<const uint8_t*>(original.data()), original.size());
     
     std::string corrupted = "Hello, Data Bridgf!";  // 'e' -> 'f'

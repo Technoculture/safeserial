@@ -1,5 +1,5 @@
 /**
- * TypeScript Type Tests for Data Bridge
+ * TypeScript Type Tests for SafeSerial
  * 
  * These tests verify the TypeScript types compile correctly.
  * Hardware tests should be run separately with actual serial devices.

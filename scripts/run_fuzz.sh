@@ -6,8 +6,8 @@ BUILD_DIR="${ROOT_DIR}/build-fuzz"
 
 cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" \
   -DCMAKE_BUILD_TYPE=Debug \
-  -DDATA_BRIDGE_ENABLE_FUZZING=ON \
-  -DDATA_BRIDGE_SANITIZERS=address,undefined
+  -DSAFESERIAL_ENABLE_FUZZING=ON \
+  -DSAFESERIAL_SANITIZERS=address,undefined
 
 if command -v nproc >/dev/null 2>&1; then
   JOBS="$(nproc)"

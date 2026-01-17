@@ -1,6 +1,6 @@
 
 /**
- * Data Bridge - Guaranteed Reliable Serial Communication
+ * SafeSerial - Guaranteed Reliable Serial Communication
  * 
  * TypeScript wrapper for the native Node-API addon.
  * Provides a clean, async-friendly API for Electron applications.

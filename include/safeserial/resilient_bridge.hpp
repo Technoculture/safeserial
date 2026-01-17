@@ -12,7 +12,7 @@
 #include <thread>
 #include <vector>
 
-#include <data_bridge/data_bridge.hpp>
+#include <safeserial/safeserial.hpp>
 
 class ResilientDataBridge {
 public:

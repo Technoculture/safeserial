@@ -3,8 +3,8 @@ import path from "path";
 // Load native addon
 function loadAddon(): any {
   const possiblePaths = [
-    `../prebuilds/${process.platform}-${process.arch}/data_bridge_node.node`,
-    "../build/Release/data_bridge_node.node",
+    `../prebuilds/${process.platform}-${process.arch}/safeserial_node.node`,
+    "../build/Release/safeserial_node.node",
   ];
 
   for (const p of possiblePaths) {

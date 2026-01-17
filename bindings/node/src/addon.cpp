@@ -1,7 +1,7 @@
 /**
- * Data Bridge Node.js Native Addon
- * 
- * Exposes the C++ Data Bridge library to JavaScript via Node-API.
+ * SafeSerial Node.js Native Addon
+ *
+ * Exposes the C++ SafeSerial library to JavaScript via Node-API.
  * Aligned with Python _core:
  * - SerialPort: Raw async serial I/O
  * - Packet: Serialization/Deserialization helpers
@@ -9,11 +9,11 @@
  */
 
 #include <napi.h>
-#include <data_bridge/data_bridge.hpp>
-#include <data_bridge/resilient_bridge.hpp>
-#include <data_bridge/transport/serial_port.hpp>
-#include <data_bridge/protocol/packet.hpp>
-#include <data_bridge/protocol/reassembler.hpp>
+#include <safeserial/safeserial.hpp>
+#include <safeserial/resilient_bridge.hpp>
+#include <safeserial/transport/serial_port.hpp>
+#include <safeserial/protocol/packet.hpp>
+#include <safeserial/protocol/reassembler.hpp>
 #include <memory>
 #include <thread>
 #include <atomic>
@@ -67,7 +67,7 @@ Napi::Object SerialPortWrapper::Init(Napi::Env env, Napi::Object exports) {
     return exports;
 }
 
-SerialPortWrapper::SerialPortWrapper(const Napi::CallbackInfo& info) 
+SerialPortWrapper::SerialPortWrapper(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<SerialPortWrapper>(info) {
     serial_ = std::make_unique<SerialPort>();
 }
@@ -95,20 +95,20 @@ Napi::Value SerialPortWrapper::Open(const Napi::CallbackInfo& info) {
 
     if (serial_->open(port, baud)) {
         is_open_ = true;
-        
+
         tsfn_ = Napi::ThreadSafeFunction::New(
             env,
             info[2].As<Napi::Function>(),
             "SerialPort Receive Callback",
             0, 1
         );
-        
+
         should_stop_ = false;
         receive_thread_ = std::thread(&SerialPortWrapper::ReceiveLoop, this);
-        
+
         return Napi::Boolean::New(env, true);
     }
-    
+
     return Napi::Boolean::New(env, false);
 }
 
@@ -148,13 +148,13 @@ void SerialPortWrapper::ReceiveLoop() {
         if (n > 0) {
             // Copy data for the callback
             std::vector<uint8_t> data(buffer, buffer + n);
-            
+
             auto status = tsfn_.BlockingCall([data](Napi::Env env, Napi::Function callback) {
                 callback.Call({
                     Napi::Buffer<uint8_t>::Copy(env, data.data(), data.size())
                 });
             });
-            
+
             if (status != napi_ok) break;
         }
         // Small sleep to prevent tight loop if read is non-blocking and returns 0 often
@@ -660,7 +660,7 @@ PacketWrapper::PacketWrapper(const Napi::CallbackInfo& info) : Napi::ObjectWrap<
 Napi::Value PacketWrapper::Serialize(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     // Args: type, seq, payload, frag_id (opt), total_frags (opt)
-    
+
     if (info.Length() < 3) throw Napi::Error::New(env, "Args: type, seq, payload");
 
     uint8_t type = info[0].As<Napi::Number>().Uint32Value();
@@ -694,11 +694,11 @@ Napi::Value PacketWrapper::Deserialize(const Napi::CallbackInfo& info) {
     Packet::Frame frame = Packet::deserialize(data);
 
     Napi::Object result = Napi::Object::New(env);
-    
+
     // Frame object
     Napi::Object frameObj = Napi::Object::New(env);
     frameObj.Set("valid", frame.valid);
-    
+
     // Header
     Napi::Object header = Napi::Object::New(env);
     header.Set("type", frame.header.type);
@@ -726,7 +726,7 @@ public:
 
 private:
     std::unique_ptr<Reassembler> reassembler_;
-    
+
     Napi::Value ProcessFragment(const Napi::CallbackInfo& info);
     Napi::Value IsComplete(const Napi::CallbackInfo& info);
     Napi::Value GetData(const Napi::CallbackInfo& info);
@@ -759,7 +759,7 @@ Packet::Frame JsToFrame(Napi::Object jsFrame) {
     frame.header.seq_id = header.Get("seq_id").As<Napi::Number>().Uint32Value();
     frame.header.fragment_id = header.Get("fragment_id").As<Napi::Number>().Uint32Value();
     frame.header.total_frags = header.Get("total_frags").As<Napi::Number>().Uint32Value();
-    
+
     Napi::Buffer<uint8_t> pl = jsFrame.Get("payload").As<Napi::Buffer<uint8_t>>();
     frame.payload.assign(pl.Data(), pl.Data() + pl.Length());
     return frame;
@@ -804,4 +804,4 @@ Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
     return exports;
 }
 
-NODE_API_MODULE(data_bridge_node, InitAll)
+NODE_API_MODULE(safeserial_node, InitAll)

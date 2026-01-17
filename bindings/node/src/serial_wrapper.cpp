@@ -3,6 +3,6 @@
  * Placeholder for any additional platform-specific helpers.
  */
 
-#include <data_bridge/transport/serial_port.hpp>
+#include <safeserial/transport/serial_port.hpp>
 
 // Additional helpers can go here if needed

@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include <data_bridge/transport/iserial_port.hpp>
+#include <safeserial/transport/iserial_port.hpp>
 
 class SerialPort : public ISerialPort {
 

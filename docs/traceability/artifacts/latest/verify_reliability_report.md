@@ -1,5 +1,5 @@
 # Test Record - CPP->CPP Reliability
-**Project:** Data Bridge Serial Protocol
+**Project:** SafeSerial Serial Protocol
 **Date:** 2026-01-17T18:51:13.688142
 **Tester:** Automated Runner
 **Configuration:** Sender=cpp, Receiver=cpp

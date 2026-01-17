@@ -195,10 +195,10 @@ def main():
     try:
         if args.sender == "internal":
             # --- INTERNAL MODE (Python Only, High Fidelity) ---
-            import data_bridge
+            import safeserial
             
-            sender = data_bridge.DataBridge()
-            receiver = data_bridge.DataBridge()
+            sender = safeserial.DataBridge()
+            receiver = safeserial.DataBridge()
             
             recv_list = []
             def on_recv(d):

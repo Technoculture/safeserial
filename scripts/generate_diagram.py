@@ -105,7 +105,7 @@ def create_multi_example_plot(output="reliability_plot.png"):
     ax.text(12.65, 2.7, '100%', fontsize=16, ha='center', fontweight='bold', color='#27ae60')
 
     # Footer
-    ax.text(7, 0.3, 'Every bit matters. Data Bridge ensures they all arrive correctly.',
+    ax.text(7, 0.3, 'Every bit matters. SafeSerial ensures they all arrive correctly.',
             fontsize=12, ha='center', style='italic', color='#34495e')
 
     plt.tight_layout()

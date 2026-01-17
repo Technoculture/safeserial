@@ -36,7 +36,7 @@ jobs:
           sudo apt-get install -y cmake ninja-build
       - name: Run sanitizer suite
         env:
-          DATA_BRIDGE_SANITIZERS: address,undefined
+          SAFESERIAL_SANITIZERS: address,undefined
         run: bash scripts/run_sanitizers.sh
 
   coverage:

@@ -1,7 +1,7 @@
 import threading
 
-import data_bridge
-from data_bridge import _core
+import safeserial
+from safeserial import _core
 
 
 class RetrySerial:
@@ -47,7 +47,7 @@ class RetrySerial:
 
 def test_databridge_retries_until_ack():
     serial = RetrySerial(drop_count=1)
-    bridge = data_bridge.DataBridge(serial=serial)
+    bridge = safeserial.DataBridge(serial=serial)
     assert bridge.open("/dev/test")
 
     bridge.send("Retry", ack_timeout_ms=50, max_retries=3, fragment_size=64)

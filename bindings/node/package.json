@@ -1,6 +1,6 @@
 {
-  "name": "@technoculture/data-bridge",
-  "version": "0.1.6",
+  "name": "@technoculture/safeserial",
+  "version": "0.1.0",
   "description": "Guaranteed reliable serial communication for Node.js and Electron",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -63,7 +63,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/technoculture/data-bridge"
+    "url": "https://github.com/technoculture/safeserial"
   },
   "keywords": [
     "serial",

@@ -200,7 +200,7 @@ def generate_fault_tolerance_chart(results: dict, output: str = "test_timeline.p
     )
 
     plt.suptitle(
-        "Data Bridge: Guaranteed Delivery Under Chaos",
+        "SafeSerial: Guaranteed Delivery Under Chaos",
         fontsize=14,
         fontweight="bold",
         y=1.02,
