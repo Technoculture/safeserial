@@ -1,0 +1,6 @@
+RequirementID,SoftwareItem,IntegrationSystemTest,Evidence
+REQ-PROTO-CRC-001,Protocol (Packet),verify_reliability.py,Test logs
+REQ-PROTO-FRAME-003,Protocol (Packet),verify_reliability.py,Test logs
+REQ-REASSEMBLY-006,Reassembler,verify_reliability.py,Test logs
+REQ-ARQ-RETRY-004,DataBridge,verify_reliability.py,Test logs
+REQ-RECONNECT-009,Resilient,verify_reliability.py,Test logs

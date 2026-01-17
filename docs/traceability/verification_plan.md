@@ -1,4 +1,4 @@
-# Verification Plan (Draft)
+# Verification Plan
 
 1) Unit Tests
 - C++ protocol and reassembly tests (GoogleTest).

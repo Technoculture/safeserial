@@ -1,5 +1,4 @@
-# SOUP Inventory (Template)
-
+# SOUP Inventory
 | SOUP ID | Component | Version | Source | Function | Safety Impact | Rationale | Controls | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | SOUP-001 | Node.js | | | Runtime for Node bindings | Potential | | Pin version, CI build | CI logs |

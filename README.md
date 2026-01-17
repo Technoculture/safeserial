@@ -100,6 +100,12 @@ Coverage threshold (default 100%):
 DATA_BRIDGE_REQ_COVERAGE=1.0 uv run python bridge.py test verify
 ```
 
+### Traceability Rollup (Submodules)
+Aggregate traceability across git submodules:
+```bash
+uv run python scripts/aggregate_traceability.py
+```
+
 ### CI
 The default CI workflow runs build/unit tests, sanitizers, coverage, and fuzzing on Linux.
 

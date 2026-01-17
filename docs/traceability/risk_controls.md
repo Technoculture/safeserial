@@ -1,4 +1,4 @@
-# Risk Controls (Draft)
+# Risk Controls
 
 RC-CRC-001: CRC32 verification on each decoded frame.
 RC-COBS-002: COBS framing with delimiter to bound packets.

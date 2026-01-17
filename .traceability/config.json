@@ -1,0 +1,8 @@
+{
+  "traceability_dir": "docs/traceability",
+  "requirements_file": "requirements.md",
+  "risk_controls_file": "risk_controls.md",
+  "matrix_file": "traceability_matrix.csv",
+  "gtest_roots": ["tests"],
+  "pytest_roots": ["bindings/python/tests"]
+}

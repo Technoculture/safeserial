@@ -1,4 +1,4 @@
-# Requirements (Draft)
+# Requirements
 
 REQ-PROTO-CRC-001: The protocol shall detect payload corruption using CRC32.
 REQ-PROTO-COBS-002: The protocol shall frame packets with COBS and delimiter.
