@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcovr
+          python -m pip install --upgrade pip
+          python -m pip install uv
+      - name: Build
+        run: python bridge.py build
+      - name: Unit tests
+        run: python bridge.py test unit
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+      - name: Run sanitizer suite
+        env:
+          DATA_BRIDGE_SANITIZERS: address,undefined
+        run: bash scripts/run_sanitizers.sh
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcovr
+      - name: Coverage
+        run: bash scripts/run_coverage.sh
+
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang
+      - name: Fuzz packet
+        env:
+          CC: clang
+          CXX: clang++
+        run: bash scripts/run_fuzz.sh

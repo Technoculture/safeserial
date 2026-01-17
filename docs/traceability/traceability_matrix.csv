@@ -11,5 +11,6 @@ REQ-REASSEMBLY-006,PacketTest.ReassemblerRejectsOutOfOrder,tests/test_deep_verif
 REQ-REASSEMBLY-007,PacketTest.ReassemblerDetectsDuplicateFragment,tests/test_deep_verification.cpp,RC-DUP-005,Duplicate detection
 REQ-SEQ-WRAP-008,PacketTest.SequenceWrapAround,tests/test_deep_verification.cpp,RC-VALIDATION-007,Seq wrap validation
 REQ-RECONNECT-009,ResilientDataBridge Types,bindings/node/test/resilient.test.ts,RC-RECONNECT-006,API exposure
+REQ-RECONNECT-009,ResilientBridgeTest.QueuesUntilReconnectAndFlushes,tests/test_resilient_bridge.cpp,RC-RECONNECT-006,Reconnect/queue flush
 REQ-ERROR-010,Python Retry Test,bindings/python/tests/test_retry.py,RC-ARQ-003,Error path/retry behavior
 REQ-INPUT-011,FuzzTarget.PacketDeserialize,tests/fuzz_packet.cpp,RC-FUZZ-008,Deserialization robustness

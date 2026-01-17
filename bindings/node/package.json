@@ -20,7 +20,7 @@
     "prebuild": "cmake-js compile -O prebuilds/$(node -p \"process.platform + '-' + process.arch\")",
     "prepack": "node scripts/copy_deps.js && npm run build:ts",
     "prepublishOnly": "npm run build:ts",
-    "test": "vitest run",
+    "test": "VITE_CJS_IGNORE_WARNING=1 vitest run",
     "clean": "cmake-js clean && rm -rf dist prebuilds deps"
   },
   "files": [

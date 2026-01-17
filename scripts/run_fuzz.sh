@@ -9,7 +9,13 @@ cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" \
   -DDATA_BRIDGE_ENABLE_FUZZING=ON \
   -DDATA_BRIDGE_SANITIZERS=address,undefined
 
-cmake --build "${BUILD_DIR}" -- -j"$(sysctl -n hw.ncpu || echo 4)"
+if command -v nproc >/dev/null 2>&1; then
+  JOBS="$(nproc)"
+else
+  JOBS="$(sysctl -n hw.ncpu || echo 4)"
+fi
+
+cmake --build "${BUILD_DIR}" -- -j"${JOBS}"
 
 if [[ -x "${BUILD_DIR}/tests/fuzz_packet" ]]; then
   "${BUILD_DIR}/tests/fuzz_packet" -runs=10000

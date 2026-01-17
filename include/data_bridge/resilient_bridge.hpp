@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <random>
 #include <string>
@@ -35,6 +36,8 @@ public:
 
     ResilientDataBridge();
     explicit ResilientDataBridge(const Options& options);
+    ResilientDataBridge(const Options& options,
+                        std::function<std::shared_ptr<ISerialPort>()> serial_factory);
     ~ResilientDataBridge();
 
     ResilientDataBridge(const ResilientDataBridge&) = delete;
@@ -78,6 +81,7 @@ private:
 
     std::string port_;
     Options options_;
+    std::function<std::shared_ptr<ISerialPort>()> serial_factory_;
 
     std::unique_ptr<DataBridge> bridge_;
     std::atomic<bool> connected_{false};

@@ -9,7 +9,13 @@ cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" \
   -DCMAKE_BUILD_TYPE=Debug \
   -DDATA_BRIDGE_COVERAGE=ON
 
-cmake --build "${BUILD_DIR}" -- -j"$(sysctl -n hw.ncpu || echo 4)"
+if command -v nproc >/dev/null 2>&1; then
+  JOBS="$(nproc)"
+else
+  JOBS="$(sysctl -n hw.ncpu || echo 4)"
+fi
+
+cmake --build "${BUILD_DIR}" -- -j"${JOBS}"
 ctest --test-dir "${BUILD_DIR}" --output-on-failure
 
 mkdir -p "${OUT_DIR}"

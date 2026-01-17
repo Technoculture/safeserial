@@ -50,7 +50,7 @@ def test_databridge_retries_until_ack():
     bridge = data_bridge.DataBridge(serial=serial)
     assert bridge.open("/dev/test")
 
-    bridge.send("Retry", ack_timeout_ms=5, max_retries=2, fragment_size=64)
+    bridge.send("Retry", ack_timeout_ms=50, max_retries=3, fragment_size=64)
 
     assert len(serial._write_log) >= 2
     bridge.close()

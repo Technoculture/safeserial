@@ -11,6 +11,12 @@ ResilientDataBridge::ResilientDataBridge()
 ResilientDataBridge::ResilientDataBridge(const Options& options)
     : options_(options) {}
 
+ResilientDataBridge::ResilientDataBridge(
+    const Options& options,
+    std::function<std::shared_ptr<ISerialPort>()> serial_factory)
+    : options_(options),
+      serial_factory_(std::move(serial_factory)) {}
+
 ResilientDataBridge::~ResilientDataBridge() {
     close();
 }
@@ -32,7 +38,7 @@ bool ResilientDataBridge::open(const std::string& port) {
 
 void ResilientDataBridge::close() {
     stop_ = true;
-    if (reconnect_thread_running_ && reconnect_thread_.joinable()) {
+    if (reconnect_thread_.joinable()) {
         reconnect_thread_.join();
     }
     reconnect_thread_running_ = false;
@@ -74,7 +80,12 @@ bool ResilientDataBridge::connect() {
         return false;
     }
 
-    bridge_ = std::make_unique<DataBridge>(options_.bridge);
+    if (serial_factory_) {
+        auto serial = serial_factory_();
+        bridge_ = std::make_unique<DataBridge>(serial, options_.bridge);
+    } else {
+        bridge_ = std::make_unique<DataBridge>(options_.bridge);
+    }
     bridge_->set_on_data([this](const std::vector<uint8_t>& data) {
         std::function<void(const std::vector<uint8_t>&)> cb;
         {

@@ -84,6 +84,9 @@ DATA_BRIDGE_SANITIZERS=thread uv run python bridge.py build
 python scripts/collect_artifacts.py
 ```
 
+### CI
+The default CI workflow runs build/unit tests, sanitizers, coverage, and fuzzing on Linux.
+
 ## Testing & Verification
 
 The project includes a universal CLI tool `bridge.py` to manage builds and tests.
