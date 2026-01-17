@@ -462,15 +462,13 @@ def task_bump(args):
     # Python version
     pyproject = PYTHON_BINDING_DIR / "pyproject.toml"
     py_text = pyproject.read_text()
-    py_match = re.search(
-        r'^version\\s*=\\s*"([0-9]+\\.[0-9]+\\.[0-9]+)"', py_text, re.M
-    )
+    py_match = re.search(r'^version\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"', py_text, re.M)
     if not py_match:
         error("Could not find Python version in pyproject.toml")
     py_version = py_match.group(1)
     py_next = bump_version(py_version)
     py_text = re.sub(
-        r'^version\\s*=\\s*"[0-9]+\\.[0-9]+\\.[0-9]+"',
+        r'^version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"',
         f'version = "{py_next}"',
         py_text,
         flags=re.M,
@@ -480,7 +478,7 @@ def task_bump(args):
     uv_lock = PYTHON_BINDING_DIR / "uv.lock"
     uv_text = uv_lock.read_text()
     uv_text = re.sub(
-        r'^version\\s*=\\s*"[0-9]+\\.[0-9]+\\.[0-9]+"',
+        r'^version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"',
         f'version = "{py_next}"',
         uv_text,
         count=1,
@@ -491,15 +489,13 @@ def task_bump(args):
     # Node version
     package_json = NODE_DIR / "package.json"
     package_text = package_json.read_text()
-    pkg_match = re.search(
-        r'"version"\\s*:\\s*"([0-9]+\\.[0-9]+\\.[0-9]+)"', package_text
-    )
+    pkg_match = re.search(r'"version"\s*:\s*"([0-9]+\.[0-9]+\.[0-9]+)"', package_text)
     if not pkg_match:
         error("Could not find Node version in package.json")
     node_version = pkg_match.group(1)
     node_next = bump_version(node_version)
     package_text = re.sub(
-        r'"version"\\s*:\\s*"[0-9]+\\.[0-9]+\\.[0-9]+"',
+        r'"version"\s*:\s*"[0-9]+\.[0-9]+\.[0-9]+"',
         f'"version": "{node_next}"',
         package_text,
         count=1,
@@ -509,7 +505,7 @@ def task_bump(args):
     package_lock = NODE_DIR / "package-lock.json"
     lock_text = package_lock.read_text()
     lock_text = re.sub(
-        r'"version"\\s*:\\s*"[0-9]+\\.[0-9]+\\.[0-9]+"',
+        r'"version"\s*:\s*"[0-9]+\.[0-9]+\.[0-9]+"',
         f'"version": "{node_next}"',
         lock_text,
         count=2,

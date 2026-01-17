@@ -1,4 +1,5 @@
 # SafeSerial
+[![NPM Version](https://img.shields.io/npm/v/%40technoculture%2Fsafeserial)](https://www.npmjs.com/package/@technoculture/safeserial) [![PyPI Version](https://img.shields.io/pypi/v/safeserial)](https://pypi.org/project/safeserial/)
 
 **When `31.9 mg` becomes `319 mg`, patients die.**
 

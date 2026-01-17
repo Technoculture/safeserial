@@ -1,6 +1,6 @@
 {
   "name": "@technoculture/safeserial",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Guaranteed reliable serial communication for Node.js and Electron",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

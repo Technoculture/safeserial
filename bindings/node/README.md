@@ -1,50 +1,46 @@
-# @technoculture/safeserial
+# SafeSerial for Node.js
 
-Guaranteed reliable serial communication for Node.js and Electron.
+Reliable serial messaging with CRC32, fragmentation, and ACK/Retry. Built for Electron and embedded workflows where silent corruption is unacceptable.
 
-## Installation
+## Install
 
 ```bash
 npm install @technoculture/safeserial
 ```
 
-Pre-built binaries are included for Windows and Linux (x64, arm64).
+If a prebuilt binary is not available for your platform, it will build from source on install.
 
-## Usage
+## Quickstart
 
-```typescript
-import { DataBridge } from '@technoculture/safeserial';
+```ts
+import { DataBridge } from "@technoculture/safeserial";
 
-// Open a serial port
-const bridge = await DataBridge.open('/dev/ttyUSB0', { baudRate: 115200 });
+const bridge = await DataBridge.open("/dev/ttyUSB0", { baudRate: 115200 });
 
-// Receive data
-bridge.on('data', (data) => {
-  console.log('Received:', data.toString());
+bridge.on("data", (data) => {
+  console.log("Received:", data.toString());
 });
 
-// Send with guaranteed delivery
-await bridge.send('Hello, World!');
-
-// Close when done
+await bridge.send("Hello, SafeSerial");
 await bridge.close();
 ```
 
-## Features
+## Why SafeSerial
 
-- **Guaranteed Delivery** — Every packet is acknowledged; lost packets are automatically retried
-- **Corruption Detection** — CRC32 checksum on every packet
-- **Large Message Support** — Automatic fragmentation and reassembly
-- **Electron Compatible** — Works in both main and renderer processes
+- Guaranteed delivery with ACK/Retry
+- CRC32 corruption detection
+- Automatic fragmentation and reassembly
+- Resilient reconnect support
+- Electron-friendly native bindings
 
-## API
+## API (Essentials)
 
 ### `DataBridge.open(port, options?)`
 
 Opens a serial port with reliable communication enabled.
 
-- `port` — Port path (e.g., `/dev/ttyUSB0` on Linux, `COM3` on Windows)
-- `options.baudRate` — Baud rate (default: 115200)
+- `port`: device path (e.g. `/dev/ttyUSB0`, `COM3`)
+- `options.baudRate`: default `115200`
 
 Returns: `Promise<DataBridge>`
 
@@ -52,11 +48,11 @@ Returns: `Promise<DataBridge>`
 
 Sends data with guaranteed delivery.
 
-- `data` — `Buffer` or `string` to send
+- `data`: `Buffer` or `string`
 
-Returns: `Promise<void>` — Resolves when acknowledged
+Returns: `Promise<void>`
 
-### `bridge.on('data', callback)`
+### `bridge.on("data", callback)`
 
 Subscribe to received data.
 
@@ -64,7 +60,7 @@ Subscribe to received data.
 
 Closes the serial port.
 
-## Building from Source
+## Build From Source
 
 ```bash
 cd bindings/node

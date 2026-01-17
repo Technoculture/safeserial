@@ -1,32 +1,65 @@
-# SafeSerial SDK Python Bindings
+# SafeSerial for Python
 
-Python bindings for the C++ SafeSerial SDK.
+Reliable serial messaging with CRC32, fragmentation, and ACK/Retry. Designed for workflows where silent corruption is unacceptable.
 
-## Installation
-Development install using `uv`:
+## Install
+
 ```bash
-uv sync
-uv pip install -e .
+pip install safeserial
 ```
 
-## Usage
+## Quickstart
 
 ```python
 import safeserial
 
-# High-Level Reliable Bridge (ARQ)
 bridge = safeserial.DataBridge()
 
 def on_data(data):
-    print(f"Received: {data}")
+    print("Received:", data)
 
-# Open connection (Auto-reconnect enabled by default)
 if bridge.open("/dev/ttyUSB0", 115200, on_data):
-    print("Connected!")
-    
-    # Check stats
-    print(bridge.stats)
-
-    # Send reliable message
-    bridge.send(b"Hello World")
+    bridge.send(b"Hello, SafeSerial")
+    bridge.close()
 ```
+
+## Why SafeSerial
+
+- Guaranteed delivery with ACK/Retry
+- CRC32 corruption detection
+- Automatic fragmentation and reassembly
+- Resilient reconnect support
+
+## API (Essentials)
+
+### `DataBridge.open(port, baud_rate, on_data)`
+
+Opens a serial port with reliable communication enabled.
+
+- `port`: device path (e.g. `/dev/ttyUSB0`, `COM3`)
+- `baud_rate`: default `115200`
+- `on_data`: callback for received payloads
+
+Returns: `bool` (connected)
+
+### `DataBridge.send(data)`
+
+Sends data with guaranteed delivery.
+
+- `data`: `bytes`
+
+### `DataBridge.close()`
+
+Closes the serial port.
+
+## Build From Source
+
+```bash
+cd bindings/python
+uv sync
+uv pip install -e .
+```
+
+## License
+
+MIT
