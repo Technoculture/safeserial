@@ -3,10 +3,16 @@ project(data_bridge_sdk_python LANGUAGES CXX)
 
 find_package(pybind11 REQUIRED CONFIG)
 
-# Define source location relative to this file
-# We use symlinks (src_cpp, include_cpp) so sdist works
+# Define source location relative to this file.
+# Prefer generated sdist sources when present, otherwise fall back to repo root.
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp")
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src_cpp")
+if(NOT EXISTS "${SRC_DIR}")
+    set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src")
+endif()
+if(NOT EXISTS "${INCLUDE_DIR}")
+    set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+endif()
 
 # Determine platform source
 if(WIN32)

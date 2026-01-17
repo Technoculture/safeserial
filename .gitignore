@@ -5,3 +5,5 @@ build
 
 tools/
 **/.DS_Store
+bindings/python/include_cpp/
+bindings/python/src_cpp/

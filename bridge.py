@@ -163,6 +163,12 @@ def task_build(args):
 
     # Python Bindings
     log("Building Python Environment...")
+    prep_sdist = PYTHON_BINDING_DIR / "scripts" / "prepare_sdist.py"
+    run(
+        [sys.executable, str(prep_sdist)],
+        cwd=PROJECT_ROOT,
+        title="Preparing Python sdist sources",
+    )
     uv_run(["pip", "install", "-e", "."], cwd=PYTHON_BINDING_DIR)
 
     log("Build Complete!")
@@ -400,6 +406,13 @@ def task_publish(args):
         dist_dir = PYTHON_BINDING_DIR / "dist"
         if dist_dir.exists():
             shutil.rmtree(dist_dir)
+
+        prep_sdist = PYTHON_BINDING_DIR / "scripts" / "prepare_sdist.py"
+        run(
+            [sys.executable, str(prep_sdist)],
+            cwd=PROJECT_ROOT,
+            title="Preparing Python sdist sources",
+        )
 
         # Build sdist and wheel
         # Note: 'uv build' must be run directly, not via 'uv run'

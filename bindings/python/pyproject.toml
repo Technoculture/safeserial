@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "data_bridge"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python bindings for Data Bridge SDK"
 readme = "README.md"
 requires-python = ">=3.8"
