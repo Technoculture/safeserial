@@ -202,6 +202,13 @@ def task_test(args):
         uv_cmd = ["--with", "matplotlib", "python", str(script)]
         uv_run(uv_cmd, cwd=PROJECT_ROOT)
 
+        linker = SCRIPTS_DIR / "link_test_ids.py"
+        run(
+            [sys.executable, str(linker)],
+            cwd=PROJECT_ROOT,
+            title="Linking TestIDs",
+        )
+
         traceability = SCRIPTS_DIR / "validate_traceability.py"
         run(
             [sys.executable, str(traceability)],

@@ -84,6 +84,22 @@ DATA_BRIDGE_SANITIZERS=thread uv run python bridge.py build
 python scripts/collect_artifacts.py
 ```
 
+### Traceability (Requirements → Tests)
+Run end-to-end verification, generate test ID links, validate coverage, and capture evidence artifacts:
+```bash
+uv run python bridge.py test verify
+```
+
+What this produces:
+- `docs/traceability/traceability_report.md` (coverage + consistency checks)
+- `docs/traceability/testid_links.md` (TestID → GTest/pytest linkage)
+- `docs/traceability/artifacts/latest/manifest.json` (evidence checksums)
+
+Coverage threshold (default 100%):
+```bash
+DATA_BRIDGE_REQ_COVERAGE=1.0 uv run python bridge.py test verify
+```
+
 ### CI
 The default CI workflow runs build/unit tests, sanitizers, coverage, and fuzzing on Linux.
 

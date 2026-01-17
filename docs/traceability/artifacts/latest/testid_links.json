@@ -1,0 +1,113 @@
+{
+  "timestamp_utc": "2026-01-17T10:40:07.886543Z",
+  "total": 15,
+  "resolved": 12,
+  "unresolved": 3,
+  "links": [
+    {
+      "test_id": "PacketTest.Crc32KnownValue",
+      "matrix_location": "tests/test_deep_verification.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_deep_verification.cpp",
+      "resolved_line": 65
+    },
+    {
+      "test_id": "PacketTest.DeserializeRejectsCorrupted",
+      "matrix_location": "tests/test_deep_verification.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_deep_verification.cpp",
+      "resolved_line": 99
+    },
+    {
+      "test_id": "PacketTest.CobsRoundtrip",
+      "matrix_location": "tests/test_deep_verification.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_deep_verification.cpp",
+      "resolved_line": 42
+    },
+    {
+      "test_id": "PacketTest.DeserializeRejectsTruncated",
+      "matrix_location": "tests/test_deep_verification.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_deep_verification.cpp",
+      "resolved_line": 112
+    },
+    {
+      "test_id": "test_deserialize_without_delimiter_is_incomplete",
+      "matrix_location": "bindings/python/tests/test_protocol_edge.py",
+      "resolved": true,
+      "resolved_location": "bindings/python/tests/test_protocol_edge.py",
+      "resolved_line": 16
+    },
+    {
+      "test_id": "DataBridgeTest.RetriesWhenAckMissing",
+      "matrix_location": "tests/test_data_bridge.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_data_bridge.cpp",
+      "resolved_line": 106
+    },
+    {
+      "test_id": "DataBridgeTest.SendSingleFragmentAcked",
+      "matrix_location": "tests/test_data_bridge.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_data_bridge.cpp",
+      "resolved_line": 73
+    },
+    {
+      "test_id": "PacketTest.ReassemblerMultipleFragments",
+      "matrix_location": "tests/test_deep_verification.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_deep_verification.cpp",
+      "resolved_line": 167
+    },
+    {
+      "test_id": "PacketTest.ReassemblerRejectsOutOfOrder",
+      "matrix_location": "tests/test_deep_verification.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_deep_verification.cpp",
+      "resolved_line": 197
+    },
+    {
+      "test_id": "PacketTest.ReassemblerDetectsDuplicateFragment",
+      "matrix_location": "tests/test_deep_verification.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_deep_verification.cpp",
+      "resolved_line": 211
+    },
+    {
+      "test_id": "PacketTest.SequenceWrapAround",
+      "matrix_location": "tests/test_deep_verification.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_deep_verification.cpp",
+      "resolved_line": 260
+    },
+    {
+      "test_id": "ResilientDataBridge Types",
+      "matrix_location": "bindings/node/test/resilient.test.ts",
+      "resolved": false,
+      "resolved_location": "",
+      "resolved_line": 0
+    },
+    {
+      "test_id": "ResilientBridgeTest.QueuesUntilReconnectAndFlushes",
+      "matrix_location": "tests/test_resilient_bridge.cpp",
+      "resolved": true,
+      "resolved_location": "tests/test_resilient_bridge.cpp",
+      "resolved_line": 78
+    },
+    {
+      "test_id": "Python Retry Test",
+      "matrix_location": "bindings/python/tests/test_retry.py",
+      "resolved": false,
+      "resolved_location": "",
+      "resolved_line": 0
+    },
+    {
+      "test_id": "FuzzTarget.PacketDeserialize",
+      "matrix_location": "tests/fuzz_packet.cpp",
+      "resolved": false,
+      "resolved_location": "",
+      "resolved_line": 0
+    }
+  ]
+}

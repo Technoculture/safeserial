@@ -28,6 +28,8 @@ ARTIFACTS = [
     ROOT / "docs" / "traceability" / "iec62304_traceability_table.md",
     ROOT / "docs" / "traceability" / "traceability_report.md",
     ROOT / "docs" / "traceability" / "traceability_report.json",
+    ROOT / "docs" / "traceability" / "testid_links.md",
+    ROOT / "docs" / "traceability" / "testid_links.json",
 ]
 
 

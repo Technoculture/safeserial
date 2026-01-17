@@ -14,3 +14,5 @@ Contents:
 Validation:
 - `scripts/validate_traceability.py` checks ID consistency, missing coverage, and test file existence.
 - `traceability_report.md` and `traceability_report.json` summarize validation results.
+- `scripts/link_test_ids.py` links TestIDs to concrete test definitions (GTest/pytest).
+- `testid_links.md` and `testid_links.json` capture linkage results.

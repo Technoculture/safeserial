@@ -15,6 +15,7 @@ import json
 import re
 import sys
 from datetime import datetime
+import os
 from pathlib import Path
 
 
@@ -29,6 +30,7 @@ REPORT_JSON = TRACE_DIR / "traceability_report.json"
 
 REQ_RE = re.compile(r"^(REQ-[A-Z0-9-]+):")
 RC_RE = re.compile(r"^(RC-[A-Z0-9-]+):")
+REQUIRED_COVERAGE = float(os.environ.get("DATA_BRIDGE_REQ_COVERAGE", "1.0"))
 
 
 def load_ids(path: Path, pattern: re.Pattern[str]) -> set[str]:
@@ -102,12 +104,23 @@ def main() -> int:
             "Requirements missing from matrix: " + ", ".join(missing_reqs)
         )
 
+    coverage_ratio = (
+        len(referenced_reqs) / len(requirements) if requirements else 0.0
+    )
+    if coverage_ratio < REQUIRED_COVERAGE:
+        errors.append(
+            f"Requirements coverage {coverage_ratio:.2%} below threshold "
+            f"{REQUIRED_COVERAGE:.2%}"
+        )
+
     report = {
         "timestamp_utc": datetime.utcnow().isoformat() + "Z",
         "requirements_total": len(requirements),
         "risk_controls_total": len(risk_controls),
         "matrix_rows": len(matrix_rows),
         "requirements_covered": len(referenced_reqs),
+        "coverage_ratio": coverage_ratio,
+        "coverage_threshold": REQUIRED_COVERAGE,
         "errors": errors,
         "warnings": warnings,
     }
@@ -123,6 +136,8 @@ def main() -> int:
                 f"- Risk controls: {report['risk_controls_total']}",
                 f"- Matrix rows: {report['matrix_rows']}",
                 f"- Requirements covered: {report['requirements_covered']}",
+                f"- Coverage ratio: {coverage_ratio:.2%}",
+                f"- Coverage threshold: {REQUIRED_COVERAGE:.2%}",
                 "",
                 "## Errors",
                 "\n".join(f"- {err}" for err in errors) if errors else "- None",
