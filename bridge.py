@@ -170,7 +170,10 @@ def task_build(args):
         cwd=PROJECT_ROOT,
         title="Preparing Python sdist sources",
     )
-    uv_run(["pip", "install", "-e", "."], cwd=PYTHON_BINDING_DIR)
+    uv = shutil.which("uv")
+    if not uv:
+        error("'uv' is required but not found in PATH.")
+    run([uv, "sync"], cwd=PYTHON_BINDING_DIR, title="Syncing Python Environment")
 
     log("Build Complete!")
 
@@ -475,16 +478,7 @@ def task_bump(args):
     )
     pyproject.write_text(py_text)
 
-    uv_lock = PYTHON_BINDING_DIR / "uv.lock"
-    uv_text = uv_lock.read_text()
-    uv_text = re.sub(
-        r'^version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"',
-        f'version = "{py_next}"',
-        uv_text,
-        count=1,
-        flags=re.M,
-    )
-    uv_lock.write_text(uv_text)
+    # uv.lock is a resolver output; do not edit it here.
 
     # Node version
     package_json = NODE_DIR / "package.json"
@@ -513,6 +507,7 @@ def task_bump(args):
     package_lock.write_text(lock_text)
 
     log(f"Bumped Python to {py_next} and Node to {node_next}")
+    log("Run `uv lock` in bindings/python to refresh uv.lock if needed.")
 
 
 # --- Main CLI ---

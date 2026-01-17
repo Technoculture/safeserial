@@ -23,7 +23,7 @@ endif()
 
 # Bindings module
 pybind11_add_module(_core
-    src/safeserial/_core.cpp
+    safeserial/_core.cpp
     "${SRC_DIR}/safeserial.cpp"
     "${SRC_DIR}/resilient_bridge.cpp"
     ${SERIAL_SRC}
