@@ -1,9 +1,9 @@
 {
-  "timestamp_utc": "2026-01-17T10:23:07.139779Z",
-  "git_commit": "4b1db796cf3fb18c4827e75e8d6a62d48926e31a",
-  "git_status": "A  .github/workflows/ci.yml\nM  README.md\nM  bindings/python/tests/test_retry.py\nMM docs/test_report.md\nMM docs/test_timeline.png\nM  docs/traceability/README.md\nM  docs/traceability/artifacts/latest/manifest.json\nMM docs/traceability/artifacts/latest/test_report.md\nMM docs/traceability/artifacts/latest/test_timeline.png\nA  docs/traceability/iec62304_traceability_table.md\nA  docs/traceability/soup_inventory.md\nM  docs/traceability/traceability_matrix.csv\nM  include/data_bridge/resilient_bridge.hpp\nM  scripts/run_coverage.sh\nM  scripts/run_fuzz.sh\nM  scripts/run_sanitizers.sh\nM  src/resilient_bridge.cpp\nMM tests/CMakeLists.txt\nD  tests/test_crc16.cpp\nA  tests/test_crc32.cpp\nA  tests/test_resilient_bridge.cpp",
+  "timestamp_utc": "2026-01-17T10:24:50.740653Z",
+  "git_commit": "88dd45a62eef00898035f056e83f10149a878da5",
+  "git_status": "M docs/test_report.md\n M docs/test_timeline.png\n M docs/traceability/artifacts/latest/test_report.md\n M docs/traceability/artifacts/latest/test_timeline.png",
   "platform": "macOS-26.2-arm64-arm-64bit",
-  "python": "3.11.7",
+  "python": "3.10.13",
   "sanitizers": "",
   "coverage": "",
   "fuzzing": ""
