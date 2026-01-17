@@ -208,6 +208,34 @@ TEST_F(PacketTest, ReassemblerRejectsOutOfOrder) {
     EXPECT_FALSE(reassembler.process_fragment(f3));  // Out of order
 }
 
+TEST_F(PacketTest, ReassemblerDetectsDuplicateFragment) {
+    Reassembler reassembler;
+
+    auto pkt1 = Packet::serialize(Packet::TYPE_DATA, 7, "First", 0, 2);
+    std::vector<uint8_t> buf1(pkt1);
+    auto f1 = Packet::deserialize(buf1);
+
+    EXPECT_TRUE(reassembler.process_fragment(f1));
+    EXPECT_TRUE(reassembler.is_duplicate(f1));
+
+    EXPECT_FALSE(reassembler.process_fragment(f1));
+    EXPECT_TRUE(reassembler.is_duplicate(f1));
+}
+
+TEST_F(PacketTest, ReassemblerRejectsNewSequenceMidMessage) {
+    Reassembler reassembler;
+
+    auto pkt1 = Packet::serialize(Packet::TYPE_DATA, 1, "First", 0, 2);
+    auto pkt2 = Packet::serialize(Packet::TYPE_DATA, 2, "Second", 1, 2);
+
+    std::vector<uint8_t> buf1(pkt1), buf2(pkt2);
+    auto f1 = Packet::deserialize(buf1);
+    auto f2 = Packet::deserialize(buf2);
+
+    EXPECT_TRUE(reassembler.process_fragment(f1));
+    EXPECT_FALSE(reassembler.process_fragment(f2));
+}
+
 // ============ Stress Tests ============
 
 TEST_F(PacketTest, StressRandomPayloads) {

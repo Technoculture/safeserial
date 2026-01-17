@@ -1,0 +1,10 @@
+{
+  "timestamp_utc": "2026-01-17T09:57:54.412786Z",
+  "git_commit": "1e1d86532696aa2f9b609c796de08c8eee85a4b2",
+  "git_status": "M  CMakeLists.txt\nM  README.md\n M bindings/node/package-lock.json\nM  bindings/node/test/resilient.test.ts\nA  bindings/python/tests/test_protocol_edge.py\nA  bindings/python/tests/test_retry.py\nMM bridge.py\n M docs/test_report.md\n M docs/test_timeline.png\nA  docs/traceability/README.md\nA  docs/traceability/artifacts/README.md\nA  docs/traceability/requirements.md\nA  docs/traceability/risk_controls.md\nAM docs/traceability/traceability_matrix.csv\nA  docs/traceability/verification_plan.md\nA  scripts/collect_artifacts.py\nA  scripts/run_coverage.sh\nA  scripts/run_fuzz.sh\nA  scripts/run_sanitizers.sh\nM  tests/CMakeLists.txt\nA  tests/fuzz_packet.cpp\nA  tests/test_data_bridge.cpp\nM  tests/test_deep_verification.cpp\n?? docs/traceability/artifacts/latest/",
+  "platform": "macOS-26.2-arm64-arm-64bit",
+  "python": "3.10.13",
+  "sanitizers": "",
+  "coverage": "",
+  "fuzzing": ""
+}

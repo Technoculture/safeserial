@@ -1,0 +1,15 @@
+RequirementID,TestID,TestLocation,RiskControlID,Notes
+REQ-PROTO-CRC-001,PacketTest.Crc32KnownValue,tests/test_deep_verification.cpp,RC-CRC-001,Known value CRC check
+REQ-PROTO-CRC-001,PacketTest.DeserializeRejectsCorrupted,tests/test_deep_verification.cpp,RC-CRC-001,Corruption rejected
+REQ-PROTO-COBS-002,PacketTest.CobsRoundtrip,tests/test_deep_verification.cpp,RC-COBS-002,COBS framing roundtrip
+REQ-PROTO-FRAME-003,PacketTest.DeserializeRejectsTruncated,tests/test_deep_verification.cpp,RC-VALIDATION-007,Truncated frame rejected
+REQ-PROTO-FRAME-003,test_deserialize_without_delimiter_is_incomplete,bindings/python/tests/test_protocol_edge.py,RC-VALIDATION-007,No-delimiter input handled
+REQ-ARQ-RETRY-004,DataBridgeTest.RetriesWhenAckMissing,tests/test_data_bridge.cpp,RC-ARQ-003,Retry path verified
+REQ-ARQ-RETRY-004,DataBridgeTest.SendSingleFragmentAcked,tests/test_data_bridge.cpp,RC-ARQ-003,ACK handling
+REQ-REASSEMBLY-005,PacketTest.ReassemblerMultipleFragments,tests/test_deep_verification.cpp,RC-REASSEMBLY-004,Reassembly order
+REQ-REASSEMBLY-006,PacketTest.ReassemblerRejectsOutOfOrder,tests/test_deep_verification.cpp,RC-REASSEMBLY-004,Out-of-order rejected
+REQ-REASSEMBLY-007,PacketTest.ReassemblerDetectsDuplicateFragment,tests/test_deep_verification.cpp,RC-DUP-005,Duplicate detection
+REQ-SEQ-WRAP-008,PacketTest.SequenceWrapAround,tests/test_deep_verification.cpp,RC-VALIDATION-007,Seq wrap validation
+REQ-RECONNECT-009,ResilientDataBridge Types,bindings/node/test/resilient.test.ts,RC-RECONNECT-006,API exposure
+REQ-ERROR-010,Python Retry Test,bindings/python/tests/test_retry.py,RC-ARQ-003,Error path/retry behavior
+REQ-INPUT-011,FuzzTarget.PacketDeserialize,tests/fuzz_packet.cpp,RC-FUZZ-008,Deserialization robustness

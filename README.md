@@ -73,6 +73,17 @@ DATA_BRIDGE_SANITIZERS=address,undefined uv run python bridge.py build
 DATA_BRIDGE_SANITIZERS=thread uv run python bridge.py build
 ```
 
+### Coverage & Fuzzing
+```bash
+./scripts/run_coverage.sh
+./scripts/run_fuzz.sh
+```
+
+### Traceability Artifacts
+```bash
+python scripts/collect_artifacts.py
+```
+
 ## Testing & Verification
 
 The project includes a universal CLI tool `bridge.py` to manage builds and tests.

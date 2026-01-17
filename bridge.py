@@ -112,6 +112,14 @@ def task_build(args):
     if sanitizers:
         cmake_args.append(f"-DDATA_BRIDGE_SANITIZERS={sanitizers}")
 
+    coverage = os.environ.get("DATA_BRIDGE_COVERAGE", "").strip()
+    if coverage:
+        cmake_args.append(f"-DDATA_BRIDGE_COVERAGE={coverage}")
+
+    fuzzing = os.environ.get("DATA_BRIDGE_ENABLE_FUZZING", "").strip()
+    if fuzzing:
+        cmake_args.append(f"-DDATA_BRIDGE_ENABLE_FUZZING={fuzzing}")
+
     if not run(cmake_args, cwd=BUILD_DIR, title="Configuring CMake"):
         error("CMake configure failed")
 
@@ -194,6 +202,13 @@ def task_test(args):
         uv_cmd = ["--with", "matplotlib", "python", str(script)]
         uv_run(uv_cmd, cwd=PROJECT_ROOT)
 
+        artifacts = SCRIPTS_DIR / "collect_artifacts.py"
+        run(
+            [sys.executable, str(artifacts)],
+            cwd=PROJECT_ROOT,
+            title="Collecting Verification Artifacts",
+        )
+
     if target == "chaos":
         log("Launching Interactive Chaos Visualizer...")
         script = SCRIPTS_DIR / "chaos_visual.py"
@@ -201,6 +216,14 @@ def task_test(args):
         extra_args = args.extra_args if hasattr(args, "extra_args") else []
         cmd = ["--with", "rich", "python", str(script)] + extra_args
         uv_run(cmd, cwd=PROJECT_ROOT)
+
+    if target == "coverage":
+        log("=== Coverage ===")
+        run(["bash", str(SCRIPTS_DIR / "run_coverage.sh")], cwd=PROJECT_ROOT)
+
+    if target == "fuzz":
+        log("=== Fuzzing ===")
+        run(["bash", str(SCRIPTS_DIR / "run_fuzz.sh")], cwd=PROJECT_ROOT)
 
 
 def task_viz(args):
@@ -314,7 +337,7 @@ def main():
     parser_test = subparsers.add_parser("test", help="Run tests")
     parser_test.add_argument(
         "target",
-        choices=["unit", "verify", "chaos", "all"],
+        choices=["unit", "verify", "chaos", "coverage", "fuzz", "all"],
         default="all",
         nargs="?",
         help="Test target: unit (C++), verify (Automated Suite), chaos (Interactive UI)",
