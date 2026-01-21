@@ -317,6 +317,10 @@ Napi::Value ResilientDataBridgeWrapper::Send(const Napi::CallbackInfo& info) {
 
     try {
         int written = bridge_->send(data);
+        if (written < 0) {
+            Napi::Error::New(env, "Send failed after retries").ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
         return Napi::Number::New(env, written);
     } catch (const std::exception& ex) {
         Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
@@ -597,6 +601,10 @@ Napi::Value DataBridgeWrapper::Send(const Napi::CallbackInfo& info) {
 
     try {
         int written = bridge_->send(data, ack_timeout_ms, max_retries, fragment_size);
+        if (written < 0) {
+            Napi::Error::New(env, "Send failed after retries").ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
         return Napi::Number::New(env, written);
     } catch (const std::exception& ex) {
         Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();

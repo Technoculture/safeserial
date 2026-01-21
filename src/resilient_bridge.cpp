@@ -240,11 +240,18 @@ int ResilientDataBridge::send(const std::vector<uint8_t>& data) {
 
     if (connected_ && bridge_) {
         try {
-            return bridge_->send(
+            int written = bridge_->send(
                 data,
                 options_.bridge.ack_timeout_ms,
                 options_.bridge.max_retries,
                 options_.bridge.fragment_size);
+            if (written >= 0) {
+                return written;
+            }
+            if (!options_.reconnect) {
+                throw std::runtime_error("Send failed after retries");
+            }
+            handle_disconnect("Send failed after retries");
         } catch (const std::exception& ex) {
             if (!options_.reconnect) {
                 throw;

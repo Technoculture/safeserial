@@ -200,7 +200,11 @@ PYBIND11_MODULE(_core, m) {
                 vec.assign(s.begin(), s.end());
             }
             py::gil_scoped_release release;
-            return self.send(vec, ack_timeout_ms, max_retries, fragment_size);
+            int written = self.send(vec, ack_timeout_ms, max_retries, fragment_size);
+            if (written < 0) {
+                throw py::runtime_error("Send failed after retries");
+            }
+            return written;
         }, py::arg("data"),
         py::arg("ack_timeout_ms") = 0,
         py::arg("max_retries") = 0,
@@ -275,7 +279,11 @@ PYBIND11_MODULE(_core, m) {
                 vec.assign(s.begin(), s.end());
             }
             py::gil_scoped_release release;
-            return self.send(vec);
+            int written = self.send(vec);
+            if (written < 0) {
+                throw py::runtime_error("Send failed after retries");
+            }
+            return written;
         }, py::arg("data"))
         .def("on", [](ResilientDataBridge& self, const std::string& event, py::function cb) {
             if (event == "data") {

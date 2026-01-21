@@ -142,6 +142,31 @@ TEST(DataBridgeTest, RetriesWhenAckMissing) {
     bridge.close();
 }
 
+
+TEST(DataBridgeTest, SendFailsAfterRetriesReturnsNegative) {
+    auto serial = std::make_shared<MockSerial>();
+    DataBridge::Options options = DataBridge::Options::Defaults();
+    options.ack_timeout_ms = 5;
+    options.max_retries = 1;
+    options.fragment_size = 128;
+    DataBridge bridge(serial, options);
+
+    int write_count = 0;
+    serial->set_on_write([&write_count](const std::vector<uint8_t>&) {
+        write_count++;
+    });
+
+    ASSERT_TRUE(bridge.open("mock"));
+
+    std::vector<uint8_t> payload = {'F', 'a', 'i', 'l'};
+    int written = bridge.send(payload, options.ack_timeout_ms, options.max_retries, options.fragment_size);
+
+    EXPECT_EQ(written, -1);
+    EXPECT_EQ(write_count, 2);
+
+    bridge.close();
+}
+
 TEST(DataBridgeTest, ReassemblesFragmentsAndAcks) {
     auto serial = std::make_shared<MockSerial>();
     DataBridge::Options options = DataBridge::Options::Defaults();
