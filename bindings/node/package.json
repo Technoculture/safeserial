@@ -1,6 +1,6 @@
 {
   "name": "@technoculture/safeserial",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Guaranteed reliable serial communication for Node.js and Electron",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -13,11 +13,11 @@
     }
   },
   "scripts": {
-    "install": "node scripts/copy_deps.js && (prebuild-install || cmake-js compile)",
+    "install": "node scripts/install.js",
     "build": "npm run build:native && npm run build:ts",
     "build:native": "cmake-js compile",
     "build:ts": "tsup lib/index.ts --format cjs,esm --dts",
-    "prebuild": "cmake-js compile -O prebuilds/$(node -p \"process.platform + '-' + process.arch\")",
+    "prebuild": "node scripts/prebuild.js",
     "prepack": "node scripts/prepare_core.js && node scripts/copy_deps.js && npm run build:ts",
     "prepublishOnly": "npm run build:ts",
     "test": "VITE_CJS_IGNORE_WARNING=1 vitest run",
@@ -64,7 +64,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/technoculture/safeserial"
+    "url": "git+https://github.com/technoculture/safeserial.git"
   },
   "keywords": [
     "serial",

@@ -68,6 +68,25 @@ npm install
 npm run build
 ```
 
+## Windows Release / npm Publish
+
+Version `0.1.4` includes a Windows prebuild flow so consuming apps do not need
+to compile the native addon during install.
+
+```bash
+cd bindings/node
+npm ci --ignore-scripts
+npm run prebuild
+npm pack --dry-run
+npm publish --access public
+```
+
+Expected package content for Windows x64:
+
+```text
+prebuilds/win32-x64/safeserial_node.node
+```
+
 ## License
 
 MIT

@@ -43,6 +43,30 @@ add_library(${PROJECT_NAME} SHARED
     ${CMAKE_JS_SRC}
 )
 
+# cmake-js supplies a node_api.def file for N-API builds on Windows, but MSVC
+# still needs a node.lib import library materialized before the addon links.
+if(WIN32 AND CMAKE_JS_NODELIB_DEF AND CMAKE_JS_NODELIB_TARGET)
+    if(CMAKE_GENERATOR_PLATFORM MATCHES "ARM64|arm64")
+        set(SAFESERIAL_NODE_LIB_MACHINE "ARM64")
+    elseif(CMAKE_GENERATOR_PLATFORM MATCHES "Win32|x86|ia32")
+        set(SAFESERIAL_NODE_LIB_MACHINE "X86")
+    else()
+        set(SAFESERIAL_NODE_LIB_MACHINE "X64")
+    endif()
+
+    add_custom_command(
+        OUTPUT "${CMAKE_JS_NODELIB_TARGET}"
+        COMMAND "${CMAKE_AR}"
+            /def:${CMAKE_JS_NODELIB_DEF}
+            /out:${CMAKE_JS_NODELIB_TARGET}
+            /machine:${SAFESERIAL_NODE_LIB_MACHINE}
+        DEPENDS "${CMAKE_JS_NODELIB_DEF}"
+        VERBATIM
+    )
+    add_custom_target(safeserial_node_lib DEPENDS "${CMAKE_JS_NODELIB_TARGET}")
+    add_dependencies(${PROJECT_NAME} safeserial_node_lib)
+endif()
+
 # Set properties for Node.js addon
 set_target_properties(${PROJECT_NAME} PROPERTIES
     PREFIX ""
