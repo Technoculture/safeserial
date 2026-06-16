@@ -153,7 +153,9 @@ int DataBridge::send(const std::vector<uint8_t>& data,
         }
 
         if (!acked) {
-            throw std::runtime_error("Send failed after retries");
+            std::lock_guard<std::mutex> lock(ack_mutex_);
+            waiting_for_ack_ = false;
+            return -1;
         }
     }
 
